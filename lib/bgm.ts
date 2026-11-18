@@ -34,10 +34,30 @@ const BASS: Note[] = [
 const hz = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
 
 export type Bgm = {
+  /** Call inside a real tap: iOS only lets audio wake up from a user gesture. */
+  unlock: () => void;
   start: () => Promise<void>;
   stop: () => void;
   setVolume: (v: number) => void;
 };
+
+// iOS silences Web Audio when the ring/silent switch is flipped, but not an
+// <audio> element. Looping a silent clip puts the tab in the playback category,
+// and Web Audio rides along with it.
+const SILENCE =
+  'data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+
+let silent: HTMLAudioElement | null = null;
+
+function keepSessionAwake(): void {
+  if (!silent) {
+    silent = new Audio(SILENCE);
+    silent.loop = true;
+    silent.volume = 0.0001;
+    silent.setAttribute('playsinline', '');
+  }
+  void silent.play().catch(() => {});
+}
 
 export function createBgm(): Bgm | null {
   if (typeof window === 'undefined') return null;
@@ -97,27 +117,40 @@ export function createBgm(): Bgm | null {
     }
   };
 
+  const ensureCtx = (): AudioContext => {
+    if (!ctx) {
+      ctx = new Ctx();
+      master = ctx.createGain();
+      master.gain.value = 0.0001;
+      master.connect(ctx.destination);
+    }
+    return ctx;
+  };
+
   return {
+    unlock() {
+      keepSessionAwake();
+      const c = ensureCtx();
+      if (c.state !== 'running') void c.resume();
+    },
     async start() {
       if (running) return;
       running = true;
-      if (!ctx) {
-        ctx = new Ctx();
-        master = ctx.createGain();
-        master.connect(ctx.destination);
-      }
-      if (ctx.state === 'suspended') await ctx.resume();
+      keepSessionAwake();
+      const c = ensureCtx();
+      if (c.state !== 'running') await c.resume();
       if (!running) return;
       if (timer) clearInterval(timer);
-      master!.gain.cancelScheduledValues(ctx.currentTime);
+      master!.gain.cancelScheduledValues(c.currentTime);
       master!.gain.value = volume;
       step = 0;
-      nextAt = ctx.currentTime + 0.08;
+      nextAt = c.currentTime + 0.08;
       schedule();
       timer = setInterval(schedule, LOOK_AHEAD_MS);
     },
     stop() {
       running = false;
+      silent?.pause();
       if (timer) clearInterval(timer);
       timer = null;
       if (master && ctx) {

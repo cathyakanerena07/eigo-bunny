@@ -3,10 +3,19 @@
 import { useEffect, useRef } from 'react';
 import { createBgm, type Bgm } from './bgm';
 
-// Browsers block audio until the page has been touched, so a BGM that was left
-// on in settings waits for the next interaction instead of failing silently.
 export function useBgm(enabled: boolean): void {
   const ref = useRef<Bgm | null>(null);
+
+  // Any tap on the page counts as the gesture iOS wants, and capture runs
+  // before React's own handlers, so the toggle's first tap already unlocks it.
+  useEffect(() => {
+    if (!ref.current) ref.current = createBgm();
+    const bgm = ref.current;
+    if (!bgm) return;
+    const unlock = () => bgm.unlock();
+    window.addEventListener('pointerdown', unlock, { capture: true });
+    return () => window.removeEventListener('pointerdown', unlock, { capture: true });
+  }, []);
 
   useEffect(() => {
     if (!ref.current) ref.current = createBgm();

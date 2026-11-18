@@ -38,7 +38,7 @@ export default function ShopPage() {
       <p className="mt-1 text-xs text-ink-soft">会話するともらえるジェムで、きせかえできるよ</p>
 
       <div className="mt-4 grid place-items-center rounded-3xl border border-line bg-lavender/40 py-5">
-        <Bunny stage={stage} pose="normal" accessories={accessories} size={120} />
+        <Bunny stage={stage} accessories={accessories} size={120} />
         <p className="pixel mt-1 text-[11px] text-ink-soft">いまのすがた</p>
       </div>
 

@@ -47,7 +47,9 @@ export default function Bunny({
   const exp: Expression = expression ?? (pose ? (POSE_EXPRESSION[pose] ?? 'idle') : 'idle');
   const motionClass = `bn bn-${motion}`;
 
-  if (pose && spriteOk) {
+  // The sprite PNGs have no accessory layers, so anything wearing something
+  // falls back to the vector art that can draw them.
+  if (pose && spriteOk && accessories.length === 0) {
     return (
       <span
         key={cycleKey}
