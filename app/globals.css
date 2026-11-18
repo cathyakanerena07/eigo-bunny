@@ -1,26 +1,176 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --pink: #f8d9ec;
+  --lavender: #dcd9ff;
+  --cream: #fff2b9;
+  --sky: #bdebf5;
+  --dark: #25243d;
+
+  --pink-deep: #f49ac8;
+  --lavender-deep: #9b93f0;
+  --sky-deep: #73cfe3;
+  --ink: #25243d;
+  --ink-soft: #7b7897;
+  --line: #e9e5f8;
+  --card: #fffdf7;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-pink: var(--pink);
+  --color-lavender: var(--lavender);
+  --color-cream: var(--cream);
+  --color-sky: var(--sky);
+  --color-dark: var(--dark);
+  --color-pink-deep: var(--pink-deep);
+  --color-lavender-deep: var(--lavender-deep);
+  --color-sky-deep: var(--sky-deep);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-card: var(--card);
+  --font-pixel: var(--font-dot);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  overscroll-behavior-y: none;
+}
+
+html,
+body {
+  background: var(--lavender);
+  color: var(--ink);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: ui-sans-serif, -apple-system, "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.pixel {
+  font-family: var(--font-dot), ui-monospace, monospace;
+  letter-spacing: 0.03em;
+}
+
+button,
+a {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.safe-top {
+  padding-top: max(env(safe-area-inset-top), 0.75rem);
+}
+
+.safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+@keyframes rise {
+  0% { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes shine {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.float { animation: float 3.2s ease-in-out infinite; }
+.pop { animation: pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.rise { animation: rise 0.35s ease-out both; }
+.twinkle { animation: twinkle 2.2s ease-in-out infinite; }
+.shine { animation: shine 9s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .float, .pop, .rise, .twinkle, .shine { animation: none; }
+}
+
+/* --- bunny motion: a continuous curve that stands in for drawn in-betweens --- */
+@keyframes bn-bob {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(-3.5%) scaleY(1.015); }
+}
+@keyframes bn-hop {
+  0% { transform: translateY(0) scale(1, 1); }
+  14% { transform: translateY(2.5%) scale(1.07, 0.93); }
+  42% { transform: translateY(-17%) scale(0.95, 1.06); }
+  58% { transform: translateY(-19%) scale(0.97, 1.03); }
+  84% { transform: translateY(1.5%) scale(1.06, 0.94); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+@keyframes bn-travel {
+  0% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(-13%) translateY(-1.5%); }
+  50% { transform: translateX(-18%) translateY(0); }
+  75% { transform: translateX(-6%) translateY(-1.5%); }
+  100% { transform: translateX(0) translateY(0); }
+}
+@keyframes bn-sway {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  30% { transform: translateX(-4.5%) translateY(-1%); }
+  70% { transform: translateX(4.5%) translateY(-1%); }
+}
+@keyframes bn-wiggle {
+  0%, 100% { transform: translateX(0) translateY(0) scale(1, 1); }
+  25% { transform: translateX(-5%) translateY(-3%) scale(0.98, 1.03); }
+  75% { transform: translateX(5%) translateY(-3%) scale(1.02, 0.98); }
+}
+@keyframes bn-settle {
+  0% { transform: translateY(-4%) scale(1.03, 0.97); }
+  40% { transform: translateY(1%) scale(0.99, 1.01); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+@keyframes bn-slump {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(1.5%) scaleY(0.985); }
+}
+@keyframes bn-breathe {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(-1.2%) scaleY(1.012); }
+}
+/* Entering a new activity eases in instead of snapping. */
+@keyframes bn-enter {
+  0% { transform: scale(0.97); opacity: 0.55; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.bn {
+  transform-origin: 50% 95%;
+  will-change: transform;
+  animation-duration: var(--dur, 1s);
+  animation-timing-function: cubic-bezier(0.37, 0, 0.26, 1);
+  animation-iteration-count: infinite;
+}
+
+.bn-bob { animation-name: bn-bob; }
+.bn-hop { animation-name: bn-hop; animation-timing-function: cubic-bezier(0.3, 0.85, 0.35, 1); }
+.bn-travel { animation-name: bn-travel; animation-timing-function: ease-in-out; }
+.bn-sway { animation-name: bn-sway; }
+.bn-wiggle { animation-name: bn-wiggle; animation-timing-function: ease-in-out; }
+.bn-settle { animation-name: bn-settle; animation-iteration-count: 1; animation-fill-mode: both; }
+.bn-slump { animation-name: bn-slump; }
+.bn-breathe { animation-name: bn-breathe; }
+.bn-none { animation-name: none; }
+
+.bn-enter { animation: bn-enter 180ms ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bn, .bn-enter { animation: none !important; }
 }

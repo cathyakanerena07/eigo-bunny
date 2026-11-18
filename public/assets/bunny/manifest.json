@@ -1,0 +1,177 @@
+{
+  "canvas": {
+    "w": 232,
+    "h": 182
+  },
+  "pad": 8,
+  "sprites": [
+    {
+      "id": "normal",
+      "file": "/assets/bunny/bunny-normal.png",
+      "w": 130,
+      "h": 134
+    },
+    {
+      "id": "smile",
+      "file": "/assets/bunny/bunny-smile.png",
+      "w": 190,
+      "h": 138
+    },
+    {
+      "id": "surprised",
+      "file": "/assets/bunny/bunny-surprised.png",
+      "w": 213,
+      "h": 137
+    },
+    {
+      "id": "glad",
+      "file": "/assets/bunny/bunny-glad.png",
+      "w": 186,
+      "h": 137
+    },
+    {
+      "id": "sad",
+      "file": "/assets/bunny/bunny-sad.png",
+      "w": 131,
+      "h": 138
+    },
+    {
+      "id": "angry",
+      "file": "/assets/bunny/bunny-angry.png",
+      "w": 160,
+      "h": 139
+    },
+    {
+      "id": "sleep",
+      "file": "/assets/bunny/bunny-sleep.png",
+      "w": 170,
+      "h": 133
+    },
+    {
+      "id": "jump",
+      "file": "/assets/bunny/bunny-jump.png",
+      "w": 146,
+      "h": 166
+    },
+    {
+      "id": "run",
+      "file": "/assets/bunny/bunny-run.png",
+      "w": 166,
+      "h": 142
+    },
+    {
+      "id": "walk",
+      "file": "/assets/bunny/bunny-walk.png",
+      "w": 137,
+      "h": 136
+    },
+    {
+      "id": "dance",
+      "file": "/assets/bunny/bunny-dance.png",
+      "w": 195,
+      "h": 154
+    },
+    {
+      "id": "wave",
+      "file": "/assets/bunny/bunny-wave.png",
+      "w": 185,
+      "h": 136
+    },
+    {
+      "id": "think",
+      "file": "/assets/bunny/bunny-think.png",
+      "w": 166,
+      "h": 144
+    },
+    {
+      "id": "shy",
+      "file": "/assets/bunny/bunny-shy.png",
+      "w": 166,
+      "h": 130
+    },
+    {
+      "id": "greet",
+      "file": "/assets/bunny/bunny-greet.png",
+      "w": 154,
+      "h": 140
+    },
+    {
+      "id": "bye",
+      "file": "/assets/bunny/bunny-bye.png",
+      "w": 216,
+      "h": 135
+    },
+    {
+      "id": "thanks",
+      "file": "/assets/bunny/bunny-thanks.png",
+      "w": 140,
+      "h": 137
+    },
+    {
+      "id": "heart",
+      "file": "/assets/bunny/bunny-heart.png",
+      "w": 184,
+      "h": 147
+    },
+    {
+      "id": "wow",
+      "file": "/assets/bunny/bunny-wow.png",
+      "w": 206,
+      "h": 151
+    },
+    {
+      "id": "cry",
+      "file": "/assets/bunny/bunny-cry.png",
+      "w": 183,
+      "h": 130
+    },
+    {
+      "id": "down",
+      "file": "/assets/bunny/bunny-down.png",
+      "w": 177,
+      "h": 148
+    },
+    {
+      "id": "eat",
+      "file": "/assets/bunny/bunny-eat.png",
+      "w": 126,
+      "h": 139
+    },
+    {
+      "id": "play",
+      "file": "/assets/bunny/bunny-play.png",
+      "w": 173,
+      "h": 137
+    },
+    {
+      "id": "sit",
+      "file": "/assets/bunny/bunny-sit.png",
+      "w": 127,
+      "h": 140
+    },
+    {
+      "id": "liedown",
+      "file": "/assets/bunny/bunny-liedown.png",
+      "w": 175,
+      "h": 139
+    },
+    {
+      "id": "wait",
+      "file": "/assets/bunny/bunny-wait.png",
+      "w": 167,
+      "h": 137
+    },
+    {
+      "id": "call",
+      "file": "/assets/bunny/bunny-call.png",
+      "w": 212,
+      "h": 136
+    },
+    {
+      "id": "levelup",
+      "file": "/assets/bunny/bunny-levelup.png",
+      "w": 196,
+      "h": 143
+    }
+  ]
+}

@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Eigo Bunny 🐰
 
-## Getting Started
+**Let's grow together.**
+英語で会話するほど、うさぎが育つ。たまごっち × AI英会話。
 
-First, run the development server:
+## 起動
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+http://localhost:3000 をスマホ or Chrome で。「ホーム画面に追加」でアプリとして使える。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`.env.local` に Gemini のキーを入れる（https://aistudio.google.com/apikey · 無料枠・クレカ不要）。
+**キーが無くても動く**が、その場合うさぎは決まった返事しか返さず、画面にその旨を表示する。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 画面
 
-## Learn More
+| タブ | 中身 |
+|---|---|
+| ホーム | 部屋・うさぎ・ごきげん・今日のレッスン・進化の進捗 |
+| レッスン | 10トピックから選んで会話 |
+| 成長記録 | 進化段階 / レベル / 累計時間 / 日数 / 覚えた単語・フレーズ / 会話履歴 |
+| ショップ | ジェムでぼうし・リボン・メガネ・おへやを買って着せ替え |
+| 設定 | 名前・英語レベル・日本語訳・音声・データ削除 |
 
-To learn more about Next.js, take a look at the following resources:
+会話画面はタブを隠した全画面モード。マイク入力・ヒント・訳の切替・読み上げ・終了。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 育成
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- 会話するとXPとジェムがもらえる → レベルアップ
+- 進化：たまご → ベビー → ジュニア → アダルト → スペシャル
+- ごきげんは放置で下がるが、**レベルや進化は絶対に下がらない**（ペナルティなし）
+- ぜんぶ localStorage。サーバーに記録は残らない
 
-## Deploy on Vercel
+## うさぎのアニメーション
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2つの描画を使い分けている。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**① SVGパーツリグ**（`components/BunnyRig.tsx`）— 全ポーズこれで描画
+元絵のエッジ位置を解析して**1ドット=11px / 12×12グリッド**と特定し、その配置をそのまま使っている。
+耳・目・口・体・影を別レイヤーに分けて独立制御：
+
+- 呼吸（体の上下）
+- ランダムなまばたき（たまに二度まばたき）
+- 左右の耳が時間差で動く／聞いてるときピンと立つ／眠いとき垂れる
+- **視線追従** — ポインタを目で追い、影も連動して伸びる（Clawd の `#eyes-js` / `#shadow-js` と同じ考え方）
+- 体の重心移動
+
+`transform` と `opacity` だけで動かしている（コンポジタに乗る＝軽い）。
+**回転は使っていない**。ドット絵を回すと輪郭がギザギザになるため、平行移動と縦スケールだけで表現している。
+
+**② スプライト**（`public/assets/bunny/`）
+ジャンプ・おどる・ハート・レベルアップなど、一瞬の大きな表情。
+提供されたシートから28ポーズを切り出して使用。元シートは `_sheet.png` に保存済み。
+一覧は `/dev/sprites` で確認できる。
+
+**③ 待機中のランダム仕草**（`lib/bunnyAnim.ts`）
+5〜11秒のランダム間隔で、手を振る・踊る・考える等を再生。同じ仕草は連続しない。
+会話中は発動しない。タブが非表示の間は停止。`prefers-reduced-motion` で全停止。
+
+**タップ反応**：1回＝ジャンプ / 連打＝びっくり→怒る / 長押し＝ハート。終わると自然にidleへ戻る。
+
+### 素材だけでは届かない部分
+
+28枚は静止画なので、**耳や目だけを動かすフレームは存在しない**。
+そこをSVGリグで補っている。逆に、ごはん・遊ぶ等の小物つきポーズはリグで再現できないのでPNGを使う。
+
+## 構成
+
+```
+app/
+  page.tsx            ホーム
+  lesson/             レッスン一覧
+  chat/[topicId]/     会話（全画面）
+  growth/ shop/ settings/
+  dev/sprites/        切り出したスプライトのプレビュー
+  api/chat/           うさぎの返事（英語＋日本語訳のJSON）
+  api/summary/        会話の要約・単語抽出・記憶する事実
+lib/
+  bunnyAnim.ts        状態マシン・ランダム仕草・タップ反応
+  sprites.ts          進化段階のドット絵・アクセサリ
+  prompt.ts           うさぎの人格と訂正ルール
+  level.ts storage.ts speech.ts
+components/
+  BunnyRig.tsx        パーツ分割SVGリグ
+  Bunny.tsx           スプライト／ベクター描画
+  LiveBunny.tsx       リグとスプライトの出し分け
+  Room.tsx            お部屋の背景
+```
+
+## まだ無い機能
+
+- **通知** — 未実装。設定にも出していない
+- **進化ごとの描き分け** — シートのうさぎは1種類なので、段階はサイズ差で表現している。たまごだけ専用ドット絵
+- **iPhoneの音声入力** — Web Speech API は iOS で不安定。Android/Mac Chrome は動作確認済み
