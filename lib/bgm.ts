@@ -36,8 +36,6 @@ const BASS: Note[] = [
 const hz = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
 
 export type Bgm = {
-  /** Call inside a real tap: iOS only lets audio wake up from a user gesture. */
-  unlock: () => void;
   start: () => Promise<void>;
   stop: () => void;
   /** Nudges the context awake; iOS suspends it whenever it feels like it. */
@@ -139,10 +137,6 @@ export function createBgm(): Bgm | null {
   };
 
   return {
-    unlock() {
-      const c = ensureCtx();
-      if (c.state !== 'running') void c.resume();
-    },
     async start() {
       if (running) return;
       running = true;

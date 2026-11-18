@@ -11,7 +11,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const focused = pathname.startsWith('/chat/');
   const { state } = useAppState();
   // The music lives up here so switching tabs never changes anything.
-  useBgm(state?.settings.bgm ?? false);
+  useBgm(state?.settings.bgm ?? false, state?.settings.autoSpeak ?? false);
 
   return (
     <>
