@@ -53,6 +53,20 @@ function pickVoice(gender: 'f' | 'm', voices: SpeechSynthesisVoice[]): SpeechSyn
   return notOther ?? voices[0];
 }
 
+let unlocked = false;
+
+// iOS blocks an utterance that did not come from a tap, and gives no error for
+// it. One silent line inside a real tap buys every later utterance — but it
+// takes the audio session to do it, so only call it where sound is the point.
+export function unlockSpeech(): void {
+  if (unlocked || !ttsSupported()) return;
+  unlocked = true;
+  const u = new SpeechSynthesisUtterance(' ');
+  u.volume = 0;
+  window.speechSynthesis.speak(u);
+  window.speechSynthesis.resume();
+}
+
 export type SpeakOptions = { preset?: VoicePreset; voiceName?: string | null; onStart?: () => void };
 
 export function speak(text: string, options: SpeakOptions = {}): void {

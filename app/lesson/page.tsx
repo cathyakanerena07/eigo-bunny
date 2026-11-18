@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import PixelIcon from '@/components/PixelIcon';
 import { CHAPTERS, nextTopic, topicsOfChapter } from '@/lib/content/topics';
+import { unlockSpeech } from '@/lib/speech';
 import { useAppState } from '@/lib/useAppState';
 
 export default function LessonPage() {
@@ -24,7 +25,10 @@ export default function LessonPage() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (typed) router.push(`/chat/custom?t=${encodeURIComponent(typed)}`);
+          if (typed) {
+            unlockSpeech();
+            router.push(`/chat/custom?t=${encodeURIComponent(typed)}`);
+          }
         }}
         className="mt-5 rounded-3xl border border-line bg-card p-4"
       >
@@ -75,6 +79,7 @@ export default function LessonPage() {
                   <li key={t.id}>
                     <Link
                       href={`/chat/${t.id}`}
+                      onPointerDown={unlockSpeech}
                       className={`flex items-center gap-3 rounded-3xl border bg-card p-4 transition active:scale-[0.99] ${
                         isNext ? 'border-lavender-deep ring-2 ring-lavender-deep/40' : 'border-line'
                       }`}

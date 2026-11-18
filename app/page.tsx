@@ -8,7 +8,7 @@ import LiveBunny from '@/components/LiveBunny';
 import Room, { type RoomVariant } from '@/components/Room';
 import { TOPICS, nextTopic } from '@/lib/content/topics';
 import { levelFromXp } from '@/lib/level';
-import { speak } from '@/lib/speech';
+import { speak, unlockSpeech } from '@/lib/speech';
 import { currentStage, dayKey, moodNow, setSettings, wornAccessories } from '@/lib/storage';
 import { STAGE_JA, STAGE_MIN_LEVEL, STAGE_ORDER } from '@/lib/sprites';
 import { useAppState } from '@/lib/useAppState';
@@ -165,6 +165,7 @@ export default function HomePage() {
           <p className="mt-1 text-center text-xs text-ink-soft">{topic.ja}</p>
           <Link
             href={`/chat/${topic.id}`}
+            onPointerDown={unlockSpeech}
             className="pixel mt-4 flex items-center justify-center gap-2 rounded-full bg-pink-deep py-3.5 text-base text-white shadow-[0_8px_18px_-10px_rgba(244,154,200,1)] transition active:translate-y-0.5"
           >
             はじめる →

@@ -13,6 +13,7 @@ import {
   createRecognizer,
   speak,
   speakWhenAllowed,
+  unlockSpeech,
   speechSupported,
   stopSpeaking,
   type Recognizer,
@@ -114,6 +115,13 @@ export default function ChatScreen({ topicId, customText }: { topicId: string; c
   }, [turns, thinking]);
 
   useEffect(() => () => recRef.current?.dispose(), []);
+
+  // Only inside a lesson: this is the one screen where the bunny talking is the
+  // whole point, so taking the audio session here is not rude.
+  useEffect(() => {
+    window.addEventListener('pointerdown', unlockSpeech, { capture: true });
+    return () => window.removeEventListener('pointerdown', unlockSpeech, { capture: true });
+  }, []);
 
   // Leaving the tab kills the microphone anyway; end the session cleanly.
   useEffect(() => {
