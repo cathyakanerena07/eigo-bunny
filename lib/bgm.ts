@@ -42,6 +42,8 @@ export type Bgm = {
   stop: () => void;
   /** Nudges the context awake; iOS suspends it whenever it feels like it. */
   keepAlive: () => void;
+  /** Silence everything while the app is off screen, without forgetting it was on. */
+  pauseForBackground: () => void;
   /** Drops the music under the bunny's voice. */
   duck: (on: boolean) => void;
   setVolume: (v: number) => void;
@@ -167,8 +169,14 @@ export function createBgm(): Bgm | null {
         master.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
       }
     },
+    pauseForBackground() {
+      if (timer) clearInterval(timer);
+      timer = null;
+      silent?.pause();
+      if (ctx && ctx.state === 'running') void ctx.suspend();
+    },
     keepAlive() {
-      if (!running) return;
+      if (!running || (typeof document !== 'undefined' && document.hidden)) return;
       if (ctx && ctx.state !== 'running') void ctx.resume();
       if (silent?.paused) void silent.play().catch(() => {});
       // A throttled tab leaves nextAt far in the past; resync instead of

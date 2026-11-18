@@ -33,10 +33,17 @@ export function useBgm(enabled: boolean): void {
     window.addEventListener('pointerdown', arm, { once: true });
 
     // iOS suspends the audio context on its own — while scrolling, after a
-    // phone call, on tab switches — so poke it back awake rather than guessing.
+    // phone call — so poke it back awake rather than guessing. But the silent
+    // clip tells iOS this app plays in the background, so closing the app has
+    // to hand the audio session straight back or the music follows you out.
     const wake = () => bgm.keepAlive();
+    const onVisibility = () => (document.hidden ? bgm.pauseForBackground() : bgm.keepAlive());
+    const leave = () => bgm.pauseForBackground();
+
     const timer = setInterval(wake, 4000);
-    document.addEventListener('visibilitychange', wake);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', leave);
+    window.addEventListener('blur', leave);
     window.addEventListener('focus', wake);
     window.addEventListener('pageshow', wake);
     window.addEventListener('touchend', wake);
@@ -45,7 +52,9 @@ export function useBgm(enabled: boolean): void {
       cancelled = true;
       clearInterval(timer);
       window.removeEventListener('pointerdown', arm);
-      document.removeEventListener('visibilitychange', wake);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', leave);
+      window.removeEventListener('blur', leave);
       window.removeEventListener('focus', wake);
       window.removeEventListener('pageshow', wake);
       window.removeEventListener('touchend', wake);
