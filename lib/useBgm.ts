@@ -2,19 +2,13 @@
 
 import { useEffect } from 'react';
 import { getBgm } from './bgm';
-import { unlockSpeech } from './speech';
 
-export function useBgm(enabled: boolean, voice: boolean): void {
-  // Any tap counts as the gesture iOS wants for the voice, and capture runs
-  // before React's handlers, so the very first tap unlocks it. The music is
-  // deliberately NOT woken here: an AudioContext that is merely running already
-  // takes the audio session, which kicks whatever the person had playing.
-  useEffect(() => {
-    if (!voice) return;
-    window.addEventListener('pointerdown', unlockSpeech, { capture: true });
-    return () => window.removeEventListener('pointerdown', unlockSpeech, { capture: true });
-  }, [voice]);
-
+// Nothing here warms up the audio on a hunch any more. iOS hands the audio
+// session to whoever touches it — an AudioContext merely running, or one
+// throwaway utterance — and whatever the person was listening to stops. So the
+// app only makes a sound when it actually has a sound to make: speakWhenAllowed
+// retries on the next tap, which is gesture enough for iOS on its own.
+export function useBgm(enabled: boolean): void {
   useEffect(() => {
     const bgm = getBgm();
     if (!bgm) return;

@@ -55,23 +55,6 @@ function pickVoice(gender: 'f' | 'm', voices: SpeechSynthesisVoice[]): SpeechSyn
 
 export type SpeakOptions = { preset?: VoicePreset; voiceName?: string | null; onStart?: () => void };
 
-let unlocked = false;
-
-// iOS refuses the first utterance unless it came from a tap, and it only fills
-// getVoices() once something has been spoken — one silent line fixes both.
-export function unlockSpeech(): void {
-  if (unlocked || !ttsSupported()) return;
-  unlocked = true;
-  const u = new SpeechSynthesisUtterance(' ');
-  u.volume = 0;
-  window.speechSynthesis.speak(u);
-  window.speechSynthesis.resume();
-}
-
-export function speechUnlocked(): boolean {
-  return unlocked;
-}
-
 export function speak(text: string, options: SpeakOptions = {}): void {
   if (!ttsSupported()) return;
   const p = presetOf(options.preset ?? 'girl');

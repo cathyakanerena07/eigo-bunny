@@ -19,6 +19,10 @@ const GREETINGS = [
   { en: "I'm a bit sleepy...\nTalk to me?", mood: 0 },
 ];
 
+// Once per app launch, not once per visit to the home tab: coming back from a
+// lesson should not make her greet you again, least of all over your music.
+let greetedThisLaunch = false;
+
 function moodFace(mood: number): IconName {
   if (mood >= 70) return 'face-happy';
   if (mood >= 40) return 'face-ok';
@@ -28,7 +32,7 @@ function moodFace(mood: number): IconName {
 export default function HomePage() {
   const { state, refresh } = useAppState();
   const [today, setToday] = useState<string | null>(null);
-  const greeted = useRef(false);
+  const greeted = useRef(greetedThisLaunch);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -49,6 +53,7 @@ export default function HomePage() {
   useEffect(() => {
     if (!hello || !voice?.autoSpeak || greeted.current) return;
     greeted.current = true;
+    greetedThisLaunch = true;
     return speakWhenAllowed(hello.replace('\n', ' '), {
       preset: voice.voicePreset,
       voiceName: voice.voiceName,
