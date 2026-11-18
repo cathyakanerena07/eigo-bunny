@@ -7,7 +7,7 @@ const TABS = [
   { href: '/', label: 'ホーム', icon: 'home' },
   { href: '/lesson', label: 'レッスン', icon: 'book' },
   { href: '/growth', label: '成長記録', icon: 'chart' },
-  { href: '/shop', label: 'ショップ', icon: 'bag' },
+  { href: '/shop', label: 'きせかえ', icon: 'bag' },
   { href: '/settings', label: '設定', icon: 'gear' },
 ] as const;
 
