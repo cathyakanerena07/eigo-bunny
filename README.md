@@ -3,6 +3,8 @@
 **Let's grow together.**
 英語で会話するほど、うさぎが育つ。たまごっち × AI英会話。
 
+**公開版 → https://eigo-bunny.vercel.app**
+
 ## 起動
 
 ```bash
@@ -94,3 +96,13 @@ components/
 - **通知** — 未実装。設定にも出していない
 - **進化ごとの描き分け** — シートのうさぎは1種類なので、段階はサイズ差で表現している。たまごだけ専用ドット絵
 - **iPhoneの音声入力** — Web Speech API は iOS で不安定。Android/Mac Chrome は動作確認済み
+
+## デプロイ
+
+`main` に push すると Vercel が自動で本番ビルドする。手動なら:
+
+```bash
+vercel deploy --prod --yes
+```
+
+Vercel 側の環境変数は `GEMINI_API_KEY` と `GEMINI_MODEL`（production / preview 両方）。追加・変更したら再デプロイしないと反映されない。
