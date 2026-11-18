@@ -1,25 +1,23 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { createBgm, type Bgm } from './bgm';
+import { useEffect } from 'react';
+import { getBgm } from './bgm';
+import { unlockSpeech } from './speech';
 
 export function useBgm(enabled: boolean): void {
-  const ref = useRef<Bgm | null>(null);
-
-  // Any tap on the page counts as the gesture iOS wants, and capture runs
-  // before React's own handlers, so the toggle's first tap already unlocks it.
+  // Any tap counts as the gesture iOS wants for both the music and the voice,
+  // and capture runs before React's handlers, so the very first tap unlocks.
   useEffect(() => {
-    if (!ref.current) ref.current = createBgm();
-    const bgm = ref.current;
-    if (!bgm) return;
-    const unlock = () => bgm.unlock();
+    const unlock = () => {
+      getBgm()?.unlock();
+      unlockSpeech();
+    };
     window.addEventListener('pointerdown', unlock, { capture: true });
     return () => window.removeEventListener('pointerdown', unlock, { capture: true });
   }, []);
 
   useEffect(() => {
-    if (!ref.current) ref.current = createBgm();
-    const bgm = ref.current;
+    const bgm = getBgm();
     if (!bgm) return;
 
     if (!enabled) {
@@ -34,12 +32,23 @@ export function useBgm(enabled: boolean): void {
     arm();
     window.addEventListener('pointerdown', arm, { once: true });
 
+    // iOS suspends the audio context on its own — while scrolling, after a
+    // phone call, on tab switches — so poke it back awake rather than guessing.
+    const wake = () => bgm.keepAlive();
+    const timer = setInterval(wake, 4000);
+    document.addEventListener('visibilitychange', wake);
+    window.addEventListener('focus', wake);
+    window.addEventListener('pageshow', wake);
+    window.addEventListener('touchend', wake);
+
     return () => {
       cancelled = true;
+      clearInterval(timer);
       window.removeEventListener('pointerdown', arm);
-      bgm.stop();
+      document.removeEventListener('visibilitychange', wake);
+      window.removeEventListener('focus', wake);
+      window.removeEventListener('pageshow', wake);
+      window.removeEventListener('touchend', wake);
     };
   }, [enabled]);
-
-  useEffect(() => () => ref.current?.stop(), []);
 }

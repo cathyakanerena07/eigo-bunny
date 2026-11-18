@@ -51,10 +51,13 @@ export function loadState(): AppState {
   }
 }
 
+export const STATE_EVENT = 'eigo-bunny:state';
+
 export function saveState(state: AppState): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(KEY, JSON.stringify(state));
+    window.dispatchEvent(new Event(STATE_EVENT));
   } catch {
     // quota or private mode — the app still runs, it just will not remember
   }

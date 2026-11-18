@@ -61,6 +61,7 @@ export default function LiveBunny({
         style={{ ['--dur' as string]: `${motionMs}ms`, width: scaled, height: scaled }}
       >
         <BunnyRig
+          stage={stage}
           pose={pose}
           talking={rig === 'talking'}
           accessories={accessories}

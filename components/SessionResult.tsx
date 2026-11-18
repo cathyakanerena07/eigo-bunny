@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import Bunny, { type Accessory } from '@/components/Bunny';
+import type { Accessory } from '@/components/Bunny';
+import PixelBunny from '@/components/PixelBunny';
 import type { Stage } from '@/lib/sprites';
 import type { Session } from '@/lib/types';
 
@@ -34,11 +35,11 @@ export default function SessionResult({
             <span className="block size-52 rounded-full bg-cream/70 blur-xl" />
           </span>
         )}
-        <Bunny
+        <PixelBunny
           stage={stage}
           pose={leveledTo ? 'levelup' : 'glad'}
           accessories={accessories}
-          size={176}
+          size={190}
         />
       </div>
 

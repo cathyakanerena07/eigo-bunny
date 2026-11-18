@@ -1,17 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import Bunny from '@/components/Bunny';
+import PixelBunny from '@/components/PixelBunny';
 import LiveBunny from '@/components/LiveBunny';
 import Room, { type RoomVariant } from '@/components/Room';
-import { TOPICS, topicOfTheDay } from '@/lib/content/topics';
+import { TOPICS, nextTopic } from '@/lib/content/topics';
 import { itemById } from '@/lib/content/shop';
 import { levelFromXp } from '@/lib/level';
+import { speak } from '@/lib/speech';
 import { currentStage, dayKey, moodNow, setSettings } from '@/lib/storage';
 import { STAGE_JA, STAGE_MIN_LEVEL, STAGE_ORDER } from '@/lib/sprites';
 import { useAppState } from '@/lib/useAppState';
-import { useBgm } from '@/lib/useBgm';
 
 const GREETINGS = [
   { en: "Hello!\nLet's have a chat!", mood: 60 },
@@ -28,12 +28,42 @@ function moodFace(mood: number): string {
 export default function HomePage() {
   const { state, refresh } = useAppState();
   const [today, setToday] = useState<string | null>(null);
-  useBgm(state?.settings.bgm ?? false);
+  const greeted = useRef(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setToday(dayKey(Date.now()));
   }, []);
+
+  const hello = state ? (GREETINGS.find((g) => moodNow(state.pet) >= g.mood) ?? GREETINGS[2]).en : '';
+  const voice = state?.settings;
+
+  const sayHello = useCallback(() => {
+    if (!hello || !voice) return;
+    speak(hello.replace('\n', ' '), { preset: voice.voicePreset, voiceName: voice.voiceName });
+  }, [hello, voice]);
+
+  // iOS blocks the first utterance until something has been tapped, so if the
+  // greeting on open does not actually start, it rides on the next tap.
+  useEffect(() => {
+    if (!hello || !voice?.autoSpeak || greeted.current) return;
+    let started = false;
+    const say = () =>
+      speak(hello.replace('\n', ' '), {
+        preset: voice.voicePreset,
+        voiceName: voice.voiceName,
+        onStart: () => {
+          started = true;
+          greeted.current = true;
+        },
+      });
+    say();
+    const retry = () => {
+      if (!started) say();
+    };
+    window.addEventListener('pointerdown', retry, { once: true });
+    return () => window.removeEventListener('pointerdown', retry);
+  }, [hello, voice]);
 
   if (!state) {
     return (
@@ -56,7 +86,8 @@ export default function HomePage() {
 
   const greeting = GREETINGS.find((g) => mood >= g.mood) ?? GREETINGS[GREETINGS.length - 1];
   const seed = today ? Number(today.replaceAll('-', '')) % TOPICS.length : 0;
-  const topic = topicOfTheDay(seed);
+  const done = new Set(sessions.map((s) => s.topicId));
+  const topic = nextTopic(done, seed);
 
   const stageIndex = STAGE_ORDER.indexOf(stage);
   const nextStage = STAGE_ORDER[stageIndex + 1];
@@ -67,10 +98,10 @@ export default function HomePage() {
       <section className="relative overflow-hidden rounded-b-[28px]" style={{ height: 420 }}>
         <Room variant={room} className="absolute inset-0 size-full" />
 
-        <div className="safe-top relative flex items-start justify-between px-4">
+        <div className="relative flex items-start justify-between px-4 pt-3">
           <div className="flex items-center gap-2 rounded-2xl bg-card/90 p-2 pr-4 shadow-sm backdrop-blur">
             <span className="grid size-10 place-items-center rounded-xl bg-pink/60">
-              <Bunny stage={stage} size={32} accessories={accessories} />
+              <PixelBunny stage={stage} size={34} accessories={accessories} />
             </span>
             <span>
               <span className="pixel block text-sm leading-tight">{pet.name}</span>
@@ -103,10 +134,15 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="relative mx-auto mt-4 w-fit max-w-[80%] rounded-2xl border-2 border-dark bg-card px-4 py-2.5 shadow-sm">
+        <button
+          type="button"
+          onClick={sayHello}
+          className="relative mx-auto mt-4 block w-fit max-w-[80%] rounded-2xl border-2 border-dark bg-card px-4 py-2.5 shadow-sm active:translate-y-px"
+          aria-label="もういちど聞く"
+        >
           <p className="pixel whitespace-pre-line text-center text-sm leading-snug">{greeting.en}</p>
           <span className="absolute -bottom-2 left-1/2 size-3 -translate-x-1/2 rotate-45 border-b-2 border-r-2 border-dark bg-card" />
-        </div>
+        </button>
 
         <div className="absolute inset-x-0 bottom-[70px] flex justify-center">
           <LiveBunny
@@ -130,9 +166,14 @@ export default function HomePage() {
 
       <section className="px-4 pt-5">
         <div className="rounded-3xl border border-line bg-card p-5 shadow-[0_8px_24px_-18px_rgba(37,36,61,0.6)]">
-          <span className="pixel inline-flex items-center gap-1.5 rounded-full bg-pink px-3 py-1 text-[11px]">
-            💬 今日のレッスン
-          </span>
+          <div className="flex items-center justify-between gap-2">
+            <span className="pixel inline-flex items-center gap-1.5 rounded-full bg-pink px-3 py-1 text-[11px]">
+              レッスン {topic.step}
+            </span>
+            <Link href="/lesson" className="pixel text-[11px] text-ink-soft underline">
+              ほかのレッスン
+            </Link>
+          </div>
           <p className="pixel mt-3 text-center text-lg leading-snug">{topic.title}</p>
           <p className="mt-1 text-center text-xs text-ink-soft">{topic.ja}</p>
           <Link
@@ -170,7 +211,7 @@ export default function HomePage() {
                     className={`flex-1 rounded-2xl px-1 py-2 text-center ${isNow ? 'bg-cream/70 ring-2 ring-pink-deep' : 'bg-lavender/40'}`}
                   >
                     {reached ? (
-                      <Bunny stage={s} size={38} className="mx-auto" />
+                      <PixelBunny stage={s} size={38} className="mx-auto" />
                     ) : (
                       <span className="pixel grid h-[38px] place-items-center text-lg text-ink-soft opacity-50">?</span>
                     )}

@@ -5,8 +5,10 @@ type Note = number | null;
 
 const BPM = 104;
 const STEP = 60 / BPM / 2; // one eighth note
-const LOOK_AHEAD_MS = 25;
-const SCHEDULE_AHEAD = 0.12;
+// iOS parks JS timers while a finger is dragging the page, so queue well ahead:
+// the music has to survive a scroll with no scheduler running at all.
+const LOOK_AHEAD_MS = 250;
+const SCHEDULE_AHEAD = 1.6;
 
 // C5=72 D5=74 E5=76 G5=79 A5=81 — a pentatonic hook over C / G / Am / F.
 const LEAD: Note[] = [
@@ -38,6 +40,10 @@ export type Bgm = {
   unlock: () => void;
   start: () => Promise<void>;
   stop: () => void;
+  /** Nudges the context awake; iOS suspends it whenever it feels like it. */
+  keepAlive: () => void;
+  /** Drops the music under the bunny's voice. */
+  duck: (on: boolean) => void;
   setVolume: (v: number) => void;
 };
 
@@ -76,6 +82,9 @@ export function createBgm(): Bgm | null {
   let step = 0;
   let nextAt = 0;
   let volume = 0.16;
+  let ducked = false;
+
+  const level = () => (ducked ? volume * 0.22 : volume);
 
   const pluck = (
     at: number,
@@ -142,7 +151,7 @@ export function createBgm(): Bgm | null {
       if (!running) return;
       if (timer) clearInterval(timer);
       master!.gain.cancelScheduledValues(c.currentTime);
-      master!.gain.value = volume;
+      master!.gain.value = level();
       step = 0;
       nextAt = c.currentTime + 0.08;
       schedule();
@@ -159,9 +168,33 @@ export function createBgm(): Bgm | null {
         master.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
       }
     },
+    keepAlive() {
+      if (!running) return;
+      if (ctx && ctx.state !== 'running') void ctx.resume();
+      if (silent?.paused) void silent.play().catch(() => {});
+      // A throttled tab leaves nextAt far in the past; resync instead of
+      // dumping every missed note at once when it comes back.
+      if (ctx && nextAt < ctx.currentTime - 0.5) nextAt = ctx.currentTime + 0.05;
+      if (!timer) timer = setInterval(schedule, LOOK_AHEAD_MS);
+    },
+    duck(on: boolean) {
+      ducked = on;
+      if (!master || !ctx || !running) return;
+      master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+      master.gain.linearRampToValueAtTime(Math.max(level(), 0.0001), ctx.currentTime + 0.18);
+    },
     setVolume(v: number) {
       volume = v;
-      if (master) master.gain.value = v;
+      if (master) master.gain.value = level();
     },
   };
+}
+
+// One player for the whole app: navigating between tabs must not restart it.
+let shared: Bgm | null = null;
+
+export function getBgm(): Bgm | null {
+  if (!shared) shared = createBgm();
+  return shared;
 }

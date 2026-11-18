@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import Bunny from '@/components/Bunny';
+import PixelBunny from '@/components/PixelBunny';
 import StatPill from '@/components/StatPill';
 import { itemById } from '@/lib/content/shop';
 import { levelFromXp } from '@/lib/level';
@@ -40,7 +40,7 @@ export default function GrowthPage() {
 
       <section className="mt-5 rounded-3xl border border-line bg-card p-5">
         <div className="flex items-center gap-4">
-          <Bunny stage={stage} accessories={accessories} size={80} />
+          <PixelBunny stage={stage} accessories={accessories} size={88} />
           <div className="min-w-0 flex-1">
             <p className="pixel text-base">{state.pet.name}</p>
             <p className="pixel text-xs text-ink-soft">
@@ -65,7 +65,7 @@ export default function GrowthPage() {
                   className={`mx-auto grid h-14 place-items-center rounded-2xl ${now ? 'bg-cream/80 ring-2 ring-pink-deep' : reached ? 'bg-lavender/40' : 'bg-line/60'}`}
                 >
                   {reached ? (
-                    <Bunny stage={s} size={40} />
+                    <PixelBunny stage={s} size={42} />
                   ) : (
                     <span className="pixel text-lg text-ink-soft opacity-50">?</span>
                   )}

@@ -293,7 +293,7 @@ function mix(hex: string, to: number, amount: number): string {
 
 export function paintColor(kind: Paint, base: string): string {
   if (kind === 'B') return mix(base, 0, 0.42);
-  if (kind === 'C') return mix(base, 255, 0.62);
+  if (kind === 'C') return mix(base, 255, 0.45);
   return base;
 }
 

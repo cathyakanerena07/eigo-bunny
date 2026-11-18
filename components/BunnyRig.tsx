@@ -3,14 +3,20 @@
 import { useEffect, useId, useState } from 'react';
 import { POSE_DEF, PROPS, type Eyes, type Mouth, type Part } from '@/lib/bunnyPose';
 import type { Pose } from '@/lib/bunnyStates';
-import { ACCESSORY_RIG, paintColor } from '@/lib/sprites';
+import { ACCESSORY_RIG, paintColor, type Stage } from '@/lib/sprites';
 
 export type RigAccessory = { id: string; color: string };
 
-const MAP = [
-  '..##....##..',
-  '.####..####.',
-  '.####..####.',
+// The face and body never change: only the ears grow, so the character stays
+// recognisably the same bunny from baby to special.
+const EARS: Record<Exclude<Stage, 'egg'>, string[]> = {
+  baby: ['............', '..##....##..', '..##....##..'],
+  junior: ['..##....##..', '.####..####.', '.####..####.'],
+  adult: ['.####..####.', '.####..####.', '.####..####.'],
+  special: ['####....####', '.####..####.', '.####..####.'],
+};
+
+const BODY = [
   '.##########.',
   '..########..',
   '.##oooooo##.',
@@ -30,25 +36,38 @@ const EAR_ROWS = 3;
 const at = (l: [number, number][], x: number, y: number) => l.some(([a, b]) => a === x && b === y);
 
 type Cell = { x: number; y: number; kind: '#' | 'o' };
+type Rig = { earL: Cell[]; earR: Cell[]; body: Cell[] };
 
-const earL: Cell[] = [];
-const earR: Cell[] = [];
-const body: Cell[] = [];
+function buildRig(stage: Exclude<Stage, 'egg'>): Rig {
+  const rows = [...EARS[stage], ...BODY];
+  const earL: Cell[] = [];
+  const earR: Cell[] = [];
+  const body: Cell[] = [];
 
-MAP.forEach((row, y) => {
-  for (let x = 0; x < GRID; x += 1) {
-    const c = row[x];
-    if (c === '.') continue;
-    const hole = at(EYE_L, x, y) || at(EYE_R, x, y) || at(MOUTH_CELLS, x, y);
-    const cell: Cell = { x, y, kind: hole ? 'o' : (c as '#' | 'o') };
-    if (y < EAR_ROWS) (x < GRID / 2 ? earL : earR).push(cell);
-    else {
-      body.push(cell);
-      // The join row rides with the ears so moving them never opens a seam.
-      if (y === EAR_ROWS) (x < GRID / 2 ? earL : earR).push(cell);
+  rows.forEach((row, y) => {
+    for (let x = 0; x < GRID; x += 1) {
+      const c = row[x];
+      if (c === '.') continue;
+      const hole = at(EYE_L, x, y) || at(EYE_R, x, y) || at(MOUTH_CELLS, x, y);
+      const cell: Cell = { x, y, kind: hole ? 'o' : (c as '#' | 'o') };
+      if (y < EAR_ROWS) (x < GRID / 2 ? earL : earR).push(cell);
+      else {
+        body.push(cell);
+        // The join row rides with the ears so moving them never opens a seam.
+        if (y === EAR_ROWS) (x < GRID / 2 ? earL : earR).push(cell);
+      }
     }
-  }
-});
+  });
+
+  return { earL, earR, body };
+}
+
+const RIGS: Record<Exclude<Stage, 'egg'>, Rig> = {
+  baby: buildRig('baby'),
+  junior: buildRig('junior'),
+  adult: buildRig('adult'),
+  special: buildRig('special'),
+};
 
 function Rects({ cells }: { cells: Cell[] }) {
   return (
@@ -90,15 +109,27 @@ const MOUTH_TF: Record<Mouth, { sx: number; sy: number; dy: number; o: number }>
 };
 
 type Props = {
+  stage?: Exclude<Stage, 'egg'>;
   pose?: Pose;
   talking?: boolean;
   accessories?: RigAccessory[];
   size?: number;
+  /** Crop to the bunny for still previews; the wide box is for poses that travel. */
+  tight?: boolean;
   className?: string;
 };
 
-export default function BunnyRig({ pose = 'normal', talking = false, accessories = [], size = 190, className = '' }: Props) {
+export default function BunnyRig({
+  stage = 'junior',
+  pose = 'normal',
+  talking = false,
+  accessories = [],
+  size = 190,
+  tight = false,
+  className = '',
+}: Props) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const { earL, earR, body } = RIGS[stage];
   const def = POSE_DEF[pose] ?? {};
   const [blink, setBlink] = useState(false);
   const [twitch, setTwitch] = useState<'l' | 'r' | null>(null);
@@ -171,7 +202,7 @@ export default function BunnyRig({ pose = 'normal', talking = false, accessories
 
   return (
     <svg
-      viewBox="-4.7 -3.6 21.4 16.3"
+      viewBox={tight ? '-0.9 -0.7 13.8 14.3' : '-4.7 -3.6 21.4 16.3'}
       width={size}
       height={size}
       className={className}

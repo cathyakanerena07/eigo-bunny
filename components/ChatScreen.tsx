@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Bunny from '@/components/Bunny';
+import PixelBunny from '@/components/PixelBunny';
 import LiveBunny from '@/components/LiveBunny';
 import SessionResult from '@/components/SessionResult';
 import { itemById } from '@/lib/content/shop';
-import { topicById } from '@/lib/content/topics';
+import { customTopic, topicById } from '@/lib/content/topics';
 import { gemsForSession, levelFromXp, xpForSession } from '@/lib/level';
 import { createRecognizer, speak, speechSupported, stopSpeaking, type Recognizer } from '@/lib/speech';
 import { commitSession, currentStage, setSettings } from '@/lib/storage';
@@ -16,10 +16,10 @@ import type { Session, Turn } from '@/lib/types';
 
 type Summary = { newWords: string[]; newPhrases: string[]; facts: string[]; praise: string };
 
-export default function ChatScreen({ topicId }: { topicId: string }) {
+export default function ChatScreen({ topicId, customText }: { topicId: string; customText?: string }) {
   const router = useRouter();
   const { state, refresh } = useAppState();
-  const topic = topicById(topicId);
+  const topic = topicId === 'custom' && customText ? customTopic(customText) : topicById(topicId);
 
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState('');
@@ -49,6 +49,7 @@ export default function ChatScreen({ topicId }: { topicId: string }) {
           body: JSON.stringify({
             petName: state.pet.name,
             topicId: topic.id,
+            customText,
             level: state.settings.englishLevel,
             memory: state.memory,
             turns: history,
@@ -73,14 +74,26 @@ export default function ChatScreen({ topicId }: { topicId: string }) {
         setThinking(false);
       }
     },
-    [state, topic],
+    [state, topic, customText],
   );
 
+  // The canned opener shows instantly; only a self-chosen theme has to wait on
+  // the model, and that is the slowest moment in the whole app.
   useEffect(() => {
     if (!state || !topic || openedRef.current) return;
     openedRef.current = true;
     startedAt.current = Date.now();
-    void ask([]);
+    if (!topic.opener) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      void ask([]);
+      return;
+    }
+    const turn: Turn = { role: 'bunny', text: topic.opener, at: Date.now() };
+    turnsRef.current = [turn];
+    setTurns([turn]);
+    if (state.settings.autoSpeak) {
+      speak(topic.opener, { preset: state.settings.voicePreset, voiceName: state.settings.voiceName });
+    }
   }, [state, topic, ask]);
 
   useEffect(() => {
@@ -270,7 +283,7 @@ export default function ChatScreen({ topicId }: { topicId: string }) {
           t.role === 'bunny' ? (
             <div key={i} className="rise flex items-end gap-2">
               <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-pink/50">
-                <Bunny stage={stage} size={24} accessories={accessories} />
+                <PixelBunny stage={stage} size={26} accessories={accessories} />
               </span>
               <div className="max-w-[78%] rounded-2xl rounded-bl-sm border-2 border-dark bg-card px-3.5 py-2.5">
                 <p className="text-[15px] leading-relaxed">{t.text}</p>
@@ -296,7 +309,7 @@ export default function ChatScreen({ topicId }: { topicId: string }) {
         {thinking && (
           <div className="flex items-end gap-2">
             <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-pink/50">
-              <Bunny stage={stage} expression="talking" size={24} accessories={accessories} />
+              <PixelBunny stage={stage} size={26} talking accessories={accessories} />
             </span>
             <span className="rounded-2xl rounded-bl-sm border-2 border-dark bg-card px-4 py-3">
               <span className="pixel text-sm text-ink-soft">● ● ●</span>

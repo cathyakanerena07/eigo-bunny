@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { loadState } from './storage';
+import { STATE_EVENT, loadState } from './storage';
 import type { AppState } from './types';
 
 export function useAppState() {
@@ -14,6 +14,12 @@ export function useAppState() {
   }, []);
 
   const refresh = useCallback(() => setState(loadState()), []);
+
+  // Every screen reads the same save, so a change anywhere has to reach them all.
+  useEffect(() => {
+    window.addEventListener(STATE_EVENT, refresh);
+    return () => window.removeEventListener(STATE_EVENT, refresh);
+  }, [refresh]);
 
   return { state, refresh };
 }

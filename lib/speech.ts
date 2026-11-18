@@ -1,3 +1,5 @@
+import { getBgm } from './bgm';
+
 export function speechSupported(): boolean {
   if (typeof window === 'undefined') return false;
   const w = window as unknown as Record<string, unknown>;
@@ -44,7 +46,19 @@ function pickVoice(gender: 'f' | 'm', voices: SpeechSynthesisVoice[]): SpeechSyn
   return notOther ?? voices[0];
 }
 
-export type SpeakOptions = { preset?: VoicePreset; voiceName?: string | null };
+export type SpeakOptions = { preset?: VoicePreset; voiceName?: string | null; onStart?: () => void };
+
+let unlocked = false;
+
+// iOS refuses the first utterance unless it came from a tap, and it only fills
+// getVoices() once something has been spoken — one silent line fixes both.
+export function unlockSpeech(): void {
+  if (unlocked || !ttsSupported()) return;
+  unlocked = true;
+  const u = new SpeechSynthesisUtterance(' ');
+  u.volume = 0;
+  window.speechSynthesis.speak(u);
+}
 
 export function speak(text: string, options: SpeakOptions = {}): void {
   if (!ttsSupported()) return;
@@ -57,11 +71,19 @@ export function speak(text: string, options: SpeakOptions = {}): void {
   u.lang = voice?.lang ?? 'en-US';
   u.pitch = p.pitch;
   u.rate = p.rate;
+  const bgm = getBgm();
+  u.onstart = () => {
+    bgm?.duck(true);
+    options.onStart?.();
+  };
+  u.onend = () => bgm?.duck(false);
+  u.onerror = () => bgm?.duck(false);
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(u);
 }
 
 export function stopSpeaking(): void {
+  getBgm()?.duck(false);
   if (ttsSupported()) window.speechSynthesis.cancel();
 }
 

@@ -1,11 +1,12 @@
 import { SAFETY, fetchWithRetry, geminiConfig, geminiUrl } from '@/lib/gemini';
 import { buildSystemPrompt, toContents } from '@/lib/prompt';
-import { topicById } from '@/lib/content/topics';
+import { customTopic, topicById } from '@/lib/content/topics';
 import type { EnglishLevel, Memory, Turn } from '@/lib/types';
 
 type Body = {
   petName: string;
   topicId: string;
+  customText?: string;
   level: EnglishLevel;
   memory: Memory;
   turns: Turn[];
@@ -26,7 +27,10 @@ const MOCK = [
 
 export async function POST(req: Request) {
   const body = (await req.json()) as Body;
-  const topic = topicById(body.topicId);
+  const topic =
+    body.topicId === 'custom' && typeof body.customText === 'string' && body.customText.trim()
+      ? customTopic(body.customText.slice(0, 160))
+      : topicById(body.topicId);
   if (!topic) return Response.json({ error: 'unknown topic' }, { status: 400 });
 
   const { apiKey, model } = geminiConfig();
@@ -35,7 +39,7 @@ export async function POST(req: Request) {
   // No key configured: keep the app usable with canned replies, and say so.
   if (!apiKey) {
     const reply = isOpener
-      ? { en: topic.opener, ja: '' }
+      ? { en: topic.opener || `Hi! Let's talk about ${topic.title}. What comes to mind?`, ja: '' }
       : MOCK[Math.min(MOCK.length - 1, Math.floor(body.turns.length / 2)) % MOCK.length];
     return Response.json({ ...reply, mock: true });
   }
@@ -56,6 +60,7 @@ export async function POST(req: Request) {
   const upstream = await fetchWithRetry(() =>
     fetch(geminiUrl(model, 'generateContent'), {
       method: 'POST',
+      signal: AbortSignal.timeout(25_000),
       headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: system }] },
@@ -63,7 +68,7 @@ export async function POST(req: Request) {
         safetySettings: SAFETY,
         generationConfig: {
           temperature: 0.9,
-          maxOutputTokens: 400,
+          maxOutputTokens: 260,
           responseMimeType: 'application/json',
           responseSchema: SCHEMA,
           thinkingConfig: { thinkingLevel: 'low' },

@@ -1,6 +1,7 @@
 'use client';
 
-import Bunny from '@/components/Bunny';
+import ItemPreview from '@/components/ItemPreview';
+import PixelBunny from '@/components/PixelBunny';
 import { SHOP_ITEMS, SLOT_JA, itemById, type ShopSlot } from '@/lib/content/shop';
 import { buyItem, currentStage, equipItem } from '@/lib/storage';
 import { useAppState } from '@/lib/useAppState';
@@ -38,7 +39,7 @@ export default function ShopPage() {
       <p className="mt-1 text-xs text-ink-soft">会話するともらえるジェムで、きせかえできるよ</p>
 
       <div className="mt-4 grid place-items-center rounded-3xl border border-line bg-lavender/40 py-5">
-        <Bunny stage={stage} accessories={accessories} size={120} />
+        <PixelBunny stage={stage} accessories={accessories} size={132} />
         <p className="pixel mt-1 text-[11px] text-ink-soft">いまのすがた</p>
       </div>
 
@@ -56,10 +57,10 @@ export default function ShopPage() {
                 return (
                   <li key={item.id} className="rounded-3xl border border-line bg-card p-3">
                     <div
-                      className="grid h-14 place-items-center rounded-2xl"
-                      style={{ background: `${item.color}40` }}
+                      className="grid h-20 place-items-center rounded-2xl"
+                      style={{ background: `${item.color}33` }}
                     >
-                      <span className="size-7 rounded-lg" style={{ background: item.color }} />
+                      <ItemPreview itemId={item.id} color={item.color} stage={stage} size={66} />
                     </div>
                     <p className="mt-2 truncate text-xs">{item.name}</p>
                     {have ? (
