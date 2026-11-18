@@ -2,7 +2,7 @@
 
 import { useId, useState } from 'react';
 import type { Motion, Pose } from '@/lib/bunnyStates';
-import { spriteCells, type Expression, type Stage } from '@/lib/sprites';
+import { paintColor, spriteCells, type Expression, type Stage } from '@/lib/sprites';
 
 export type Accessory = { id: string; color: string };
 
@@ -77,18 +77,16 @@ export default function Bunny({
   }
 
   const ids = accessories.map((a) => a.id);
-  const accColor = (x: number, y: number) =>
-    accessories.find((a) =>
-      spriteCells(stage, exp, 0, [a.id]).some(([ax, ay, k]) => k === 'A' && ax === x && ay === y),
-    )?.color ?? 'var(--pink-deep)';
+  const accColor = (id?: string) =>
+    accessories.find((x) => x.id === id)?.color ?? 'var(--pink-deep)';
 
   const a = spriteCells(stage, exp, 0, ids);
   const b = spriteCells(stage, exp, 1, ids);
   const speed = exp === 'talking' ? '0.32s' : exp === 'surprised' ? '0.5s' : '3.4s';
   const duty = exp === 'idle' || exp === 'sleepy' ? 93 : 50;
 
-  const fill = (kind: '#' | 'o' | 'A', x: number, y: number) =>
-    kind === '#' ? 'var(--dark)' : kind === 'o' ? 'var(--cream)' : accColor(x, y);
+  const fill = (kind: '#' | 'o' | 'A' | 'B' | 'C', id?: string) =>
+    kind === '#' ? 'var(--dark)' : kind === 'o' ? 'var(--cream)' : paintColor(kind, accColor(id));
 
   return (
     <svg
@@ -111,13 +109,13 @@ export default function Bunny({
         }
       `}</style>
       <g className={`${uid}-fa`}>
-        {a.map(([x, y, kind]) => (
-          <rect key={`a${x}-${y}-${kind}`} x={x} y={y} width="1" height="1" fill={fill(kind, x, y)} />
+        {a.map(([x, y, kind, id]) => (
+          <rect key={`a${x}-${y}-${kind}-${id ?? ""}`} x={x} y={y} width="1" height="1" fill={fill(kind, id)} />
         ))}
       </g>
       <g className={`${uid}-fb`}>
-        {b.map(([x, y, kind]) => (
-          <rect key={`b${x}-${y}-${kind}`} x={x} y={y} width="1" height="1" fill={fill(kind, x, y)} />
+        {b.map(([x, y, kind, id]) => (
+          <rect key={`b${x}-${y}-${kind}-${id ?? ""}`} x={x} y={y} width="1" height="1" fill={fill(kind, id)} />
         ))}
       </g>
     </svg>

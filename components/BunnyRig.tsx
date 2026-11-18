@@ -3,7 +3,7 @@
 import { useEffect, useId, useState } from 'react';
 import { POSE_DEF, PROPS, type Eyes, type Mouth, type Part } from '@/lib/bunnyPose';
 import type { Pose } from '@/lib/bunnyStates';
-import { ACCESSORY, ACCESSORY_ROW } from '@/lib/sprites';
+import { ACCESSORY_RIG, paintColor } from '@/lib/sprites';
 
 export type RigAccessory = { id: string; color: string };
 
@@ -260,22 +260,25 @@ export default function BunnyRig({ pose = 'normal', talking = false, accessories
               </g>
             </g>
 
-            {accessories.map((acc) =>
-              (ACCESSORY[acc.id] ?? []).map((row, i) =>
+            {accessories.map((acc) => {
+              const art = ACCESSORY_RIG[acc.id];
+              if (!art) return null;
+              const top = art.anchor === 'eyes' ? 6 + art.row : art.row;
+              return art.rows.map((row, i) =>
                 row.split('').map((ch, x) =>
-                  ch === 'A' ? (
+                  ch === 'A' || ch === 'B' || ch === 'C' ? (
                     <rect
                       key={`${acc.id}-${x}-${i}`}
                       x={x}
-                      y={i + (ACCESSORY_ROW[acc.id] ?? 0)}
+                      y={i + top}
                       width="1.02"
                       height="1.02"
-                      fill={acc.color}
+                      fill={paintColor(ch, acc.color)}
                     />
                   ) : null,
                 ),
-              ),
-            )}
+              );
+            })}
           </g>
         </g>
 

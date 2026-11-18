@@ -194,22 +194,111 @@ const EXPRESSION: Record<Expression, FramePair> = {
   ],
 };
 
-export const ACCESSORY: Record<string, Sprite> = {
-  'hat-cap': ['..AAAAAAAA..', '.AAAAAAAAAA.'],
-  'hat-crown': ['..A.AAAA.A..', '..AAAAAAAA..'],
-  'ribbon-pink': ['AAA.........', '.AA.........'],
-  'glasses-round': ['..AAA..AAA..'],
+// Accessories are drawn in their own palette: A main, B shade, C highlight.
+export type Paint = 'A' | 'B' | 'C';
+
+// Where the art hangs: the top of the head (row 4 on every hatched stage) or
+// the eye row, which sits a pixel higher on the baby.
+type Anchor = 'head' | 'eyes';
+
+type AccessoryArt = { rows: Sprite; row: number; anchor: Anchor };
+
+// 16x16 sprite bunny.
+export const ACCESSORY: Record<string, AccessoryArt> = {
+  'hat-cap': {
+    anchor: 'head',
+    row: 4,
+    rows: [
+      '...AAAAAAAAAA...',
+      '...AAAAAAAAAA...',
+      '..BBBBBBBBBBBB..',
+    ],
+  },
+  'hat-crown': {
+    anchor: 'head',
+    row: 4,
+    rows: [
+      '...A..A..A..A...',
+      '...AAAACCAAAA...',
+    ],
+  },
+  'ribbon-pink': {
+    anchor: 'head',
+    row: 3,
+    rows: [
+      '..AA.AA.........',
+      '...ABA..........',
+      '..AA.AA.........',
+    ],
+  },
+  'glasses-round': {
+    anchor: 'eyes',
+    row: -1,
+    rows: [
+      '...AAAA..AAAA...',
+      '...A..ABBA..A...',
+      '...AAAA..AAAA...',
+    ],
+  },
 };
 
-// Row the overlay starts on, in the 12x12 grid.
-export const ACCESSORY_ROW: Record<string, number> = {
-  'hat-cap': 3,
-  'hat-crown': 1,
-  'ribbon-pink': 2,
-  'glasses-round': 6,
+// 12x12 part-based rig. Eyes sit at (3,6) and (8,6), ears on rows 0-2.
+export const ACCESSORY_RIG: Record<string, AccessoryArt> = {
+  'hat-cap': {
+    anchor: 'head',
+    row: 3,
+    rows: [
+      '..AAAAAAAA..',
+      '..AAAAAAAA..',
+      '.BBBBBBBBBB.',
+    ],
+  },
+  'hat-crown': {
+    anchor: 'head',
+    row: 3,
+    rows: [
+      '..A.A..A.A..',
+      '..AAACCAAA..',
+    ],
+  },
+  'ribbon-pink': {
+    anchor: 'head',
+    row: 1,
+    rows: [
+      'AA.AA.......',
+      '.ABA........',
+      'AA.AA.......',
+    ],
+  },
+  'glasses-round': {
+    anchor: 'eyes',
+    row: -1,
+    rows: [
+      '..AAA..AAA..',
+      '..A.ABBA.A..',
+      '..AAA..AAA..',
+    ],
+  },
 };
 
-export type Cell = [number, number, '#' | 'o' | 'A'];
+// One colour per item, mixed toward black for the shade and toward white for
+// the highlight, so every accessory reads as a shape instead of a flat blob.
+function mix(hex: string, to: number, amount: number): string {
+  const n = Number.parseInt(hex.slice(1), 16);
+  const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) =>
+    Math.round(c + (to - c) * amount),
+  );
+  return `#${ch.map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+}
+
+export function paintColor(kind: Paint, base: string): string {
+  if (kind === 'B') return mix(base, 0, 0.42);
+  if (kind === 'C') return mix(base, 255, 0.62);
+  return base;
+}
+
+export type Cell = [number, number, '#' | 'o' | Paint, string?];
+
 
 export function spriteCells(
   stage: Stage,
@@ -240,10 +329,11 @@ export function spriteCells(
     for (const id of accessories) {
       const art = ACCESSORY[id];
       if (!art) continue;
-      const offset = ACCESSORY_ROW[id] ?? 0;
-      art.forEach((row, i) => {
+      const offset = art.anchor === 'eyes' ? (face?.eyes ?? 8) + art.row : art.row;
+      art.rows.forEach((row, i) => {
         for (let x = 0; x < 16; x += 1) {
-          if (row[x] === 'A') out.push([x, i + offset, 'A']);
+          const c = row[x];
+          if (c === 'A' || c === 'B' || c === 'C') out.push([x, i + offset, c, id]);
         }
       });
     }
