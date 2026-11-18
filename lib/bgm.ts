@@ -47,24 +47,6 @@ export type Bgm = {
   setVolume: (v: number) => void;
 };
 
-// iOS silences Web Audio when the ring/silent switch is flipped, but not an
-// <audio> element. Looping a silent clip puts the tab in the playback category,
-// and Web Audio rides along with it.
-const SILENCE =
-  'data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
-
-let silent: HTMLAudioElement | null = null;
-
-function keepSessionAwake(): void {
-  if (!silent) {
-    silent = new Audio(SILENCE);
-    silent.loop = true;
-    silent.volume = 0.0001;
-    silent.setAttribute('playsinline', '');
-  }
-  void silent.play().catch(() => {});
-}
-
 export function createBgm(): Bgm | null {
   if (typeof window === 'undefined') return null;
   const Ctx = (window.AudioContext ??
@@ -140,7 +122,6 @@ export function createBgm(): Bgm | null {
     async start() {
       if (running) return;
       running = true;
-      keepSessionAwake();
       const c = ensureCtx();
       if (c.state !== 'running') await c.resume();
       if (!running) return;
@@ -157,7 +138,6 @@ export function createBgm(): Bgm | null {
     },
     stop() {
       running = false;
-      silent?.pause();
       if (timer) clearInterval(timer);
       timer = null;
       if (!master || !ctx) return;
@@ -178,13 +158,11 @@ export function createBgm(): Bgm | null {
     pauseForBackground() {
       if (timer) clearInterval(timer);
       timer = null;
-      silent?.pause();
       if (ctx && ctx.state === 'running') void ctx.suspend();
     },
     keepAlive() {
       if (!running || (typeof document !== 'undefined' && document.hidden)) return;
       if (ctx && ctx.state !== 'running') void ctx.resume();
-      if (silent?.paused) void silent.play().catch(() => {});
       // A throttled tab leaves nextAt far in the past; resync instead of
       // dumping every missed note at once when it comes back.
       if (ctx && nextAt < ctx.currentTime - 0.5) nextAt = ctx.currentTime + 0.05;
@@ -193,10 +171,6 @@ export function createBgm(): Bgm | null {
     duck(on: boolean) {
       ducked = on;
       if (!running) return;
-      // iOS hands the audio session to whoever is holding a media element, and
-      // that starves speechSynthesis — so let go of it while the bunny talks.
-      if (on) silent?.pause();
-      else keepSessionAwake();
       if (!master || !ctx) return;
       master.gain.cancelScheduledValues(ctx.currentTime);
       master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
