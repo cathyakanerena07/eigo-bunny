@@ -8,9 +8,10 @@ import Room, { type RoomVariant } from '@/components/Room';
 import { TOPICS, topicOfTheDay } from '@/lib/content/topics';
 import { itemById } from '@/lib/content/shop';
 import { levelFromXp } from '@/lib/level';
-import { currentStage, dayKey, moodNow } from '@/lib/storage';
+import { currentStage, dayKey, moodNow, setSettings } from '@/lib/storage';
 import { STAGE_JA, STAGE_MIN_LEVEL, STAGE_ORDER } from '@/lib/sprites';
 import { useAppState } from '@/lib/useAppState';
+import { useBgm } from '@/lib/useBgm';
 
 const GREETINGS = [
   { en: "Hello!\nLet's have a chat!", mood: 60 },
@@ -25,8 +26,9 @@ function moodFace(mood: number): string {
 }
 
 export default function HomePage() {
-  const { state } = useAppState();
+  const { state, refresh } = useAppState();
   const [today, setToday] = useState<string | null>(null);
+  useBgm(state?.settings.bgm ?? false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -79,13 +81,26 @@ export default function HomePage() {
             </span>
           </div>
 
-          <Link
-            href="/shop"
-            className="flex items-center gap-1.5 rounded-2xl bg-card/90 px-3 py-2 shadow-sm backdrop-blur"
-          >
-            <span className="text-sm">💎</span>
-            <span className="pixel text-sm tabular-nums">{pet.gems}</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setSettings({ bgm: !state.settings.bgm });
+                refresh();
+              }}
+              className={`grid size-10 place-items-center rounded-2xl text-base shadow-sm backdrop-blur ${state.settings.bgm ? 'bg-cream' : 'bg-card/90'}`}
+              aria-label={state.settings.bgm ? 'BGMをとめる' : 'BGMをながす'}
+            >
+              {state.settings.bgm ? '🎵' : '🔇'}
+            </button>
+            <Link
+              href="/shop"
+              className="flex items-center gap-1.5 rounded-2xl bg-card/90 px-3 py-2 shadow-sm backdrop-blur"
+            >
+              <span className="text-sm">💎</span>
+              <span className="pixel text-sm tabular-nums">{pet.gems}</span>
+            </Link>
+          </div>
         </div>
 
         <div className="relative mx-auto mt-4 w-fit max-w-[80%] rounded-2xl border-2 border-dark bg-card px-4 py-2.5 shadow-sm">

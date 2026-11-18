@@ -1,4 +1,5 @@
 import type { Stage } from './sprites';
+import type { VoicePreset } from './speech';
 
 export type EnglishLevel = 'beginner' | 'intermediate' | 'advanced';
 
@@ -38,7 +39,9 @@ export type Settings = {
   englishLevel: EnglishLevel;
   showJa: boolean;
   autoSpeak: boolean;
+  voicePreset: VoicePreset;
   voiceName: string | null;
+  bgm: boolean;
 };
 
 export type Memory = {

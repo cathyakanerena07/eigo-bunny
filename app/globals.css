@@ -145,6 +145,41 @@ a {
   0%, 100% { transform: translateY(0) scaleY(1); }
   50% { transform: translateY(-1.2%) scaleY(1.012); }
 }
+@keyframes bn-spin {
+  0% { transform: scaleX(1); }
+  25% { transform: scaleX(0.16); }
+  50% { transform: scaleX(-1); }
+  75% { transform: scaleX(0.16); }
+  100% { transform: scaleX(1); }
+}
+@keyframes bn-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4.5%); }
+  40% { transform: translateX(4.5%); }
+  60% { transform: translateX(-3%); }
+  80% { transform: translateX(3%); }
+}
+@keyframes bn-nod {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  30% { transform: translateY(4%) scaleY(0.93); }
+  62% { transform: translateY(-2.5%) scaleY(1.04); }
+}
+@keyframes bn-pop {
+  0% { transform: scale(1, 1) translateY(0); }
+  28% { transform: scale(1.11, 0.89) translateY(2.5%); }
+  56% { transform: scale(0.93, 1.11) translateY(-9%); }
+  100% { transform: scale(1, 1) translateY(0); }
+}
+@keyframes bn-drift {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(13%) translateY(-1.5%); }
+  50% { transform: translateX(18%) translateY(0); }
+  75% { transform: translateX(6%) translateY(-1.5%); }
+}
+@keyframes bn-peek {
+  0%, 100% { transform: translateY(15%) scaleY(0.95); }
+  35%, 68% { transform: translateY(-2%) scaleY(1); }
+}
 /* Entering a new activity eases in instead of snapping. */
 @keyframes bn-enter {
   0% { transform: scale(0.97); opacity: 0.55; }
@@ -167,6 +202,12 @@ a {
 .bn-settle { animation-name: bn-settle; animation-iteration-count: 1; animation-fill-mode: both; }
 .bn-slump { animation-name: bn-slump; }
 .bn-breathe { animation-name: bn-breathe; }
+.bn-spin { animation-name: bn-spin; animation-timing-function: ease-in-out; }
+.bn-shake { animation-name: bn-shake; animation-timing-function: ease-in-out; }
+.bn-nod { animation-name: bn-nod; }
+.bn-pop { animation-name: bn-pop; animation-timing-function: cubic-bezier(0.3, 0.85, 0.35, 1); }
+.bn-drift { animation-name: bn-drift; animation-timing-function: ease-in-out; }
+.bn-peek { animation-name: bn-peek; animation-timing-function: ease-in-out; }
 .bn-none { animation-name: none; }
 
 .bn-enter { animation: bn-enter 180ms ease-out both; }

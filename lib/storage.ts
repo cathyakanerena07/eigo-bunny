@@ -16,7 +16,7 @@ export const DEFAULT_STATE: AppState = {
     lastTalkAt: null,
     seenStage: 'egg',
   },
-  settings: { englishLevel: 'beginner', showJa: true, autoSpeak: true, voiceName: null },
+  settings: { englishLevel: 'beginner', showJa: true, autoSpeak: true, voicePreset: 'girl', voiceName: null, bgm: false },
   sessions: [],
   memory: { facts: [], lastTopics: [] },
   words: [],

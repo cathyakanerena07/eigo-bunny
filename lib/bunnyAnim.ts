@@ -10,6 +10,7 @@ import {
   SLEEPING_AFTER_MS,
   SLEEPY_AFTER_MS,
   STATES,
+  TAP_POOL,
   TICK_MS,
   type BunnyState,
   type Frame,
@@ -198,7 +199,7 @@ export function useBunnyAnimator(base: BunnyState, options: Options = {}) {
         program.current.frames === STATES.sleeping.frames ? 'sleeping' : '',
       );
       lastInteraction.current = now;
-      const r = REACTIONS[kind];
+      const r = kind === 'tap' ? TAP_POOL[Math.floor(Math.random() * TAP_POOL.length)] : REACTIONS[kind];
       apply({
         priority: 2,
         frames: r.frames,

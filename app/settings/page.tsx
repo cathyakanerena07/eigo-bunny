@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { englishVoices, speak, ttsSupported } from '@/lib/speech';
+import { VOICE_PRESETS, englishVoices, speak, ttsSupported } from '@/lib/speech';
 import { renamePet, resetAll, setSettings } from '@/lib/storage';
 import { useAppState } from '@/lib/useAppState';
 import type { EnglishLevel } from '@/lib/types';
@@ -83,6 +83,7 @@ export default function SettingsPage() {
         {[
           { key: 'showJa' as const, label: '日本語訳をだす', on: s.showJa },
           { key: 'autoSpeak' as const, label: 'うさぎの声を自動でながす', on: s.autoSpeak },
+          { key: 'bgm' as const, label: 'ホームでBGMをながす', on: s.bgm },
         ].map((row) => (
           <button
             key={row.key}
@@ -107,28 +108,56 @@ export default function SettingsPage() {
         <h2 className="pixel text-sm">こえ</h2>
         {ttsSupported() ? (
           <>
-            <select
-              value={s.voiceName ?? ''}
-              onChange={(e) => {
-                setSettings({ voiceName: e.target.value || null });
-                refresh();
-              }}
-              className="mt-2 w-full rounded-2xl border border-line bg-white px-3 py-2.5 text-sm outline-none"
-            >
-              <option value="">おまかせ</option>
-              {voices.map((v) => (
-                <option key={v.name} value={v.name}>
-                  {v.name} ({v.lang})
-                </option>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {VOICE_PRESETS.map((v) => (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => {
+                    setSettings({ voicePreset: v.id, voiceName: null });
+                    refresh();
+                    speak('Hi! I am so happy to see you.', { preset: v.id });
+                  }}
+                  className={`rounded-2xl border px-1 py-3 text-center transition ${
+                    s.voicePreset === v.id ? 'border-pink-deep bg-pink/40' : 'border-line bg-white'
+                  }`}
+                >
+                  <span className="block text-lg">{v.emoji}</span>
+                  <span className="pixel mt-1 block text-[10px] leading-tight">{v.ja}</span>
+                </button>
               ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => speak('Hi! Let us have a chat today.', s.voiceName)}
-              className="pixel mt-2 w-full rounded-full bg-sky py-2.5 text-xs"
-            >
-              ▶ ためしにきく
-            </button>
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-ink-soft">
+              タップすると試し聞きできる。声の高さの効きかたは端末によって差があるよ
+            </p>
+
+            <details className="mt-3">
+              <summary className="pixel cursor-pointer text-[11px] text-ink-soft">
+                端末の声を直接えらぶ
+              </summary>
+              <select
+                value={s.voiceName ?? ''}
+                onChange={(e) => {
+                  setSettings({ voiceName: e.target.value || null });
+                  refresh();
+                }}
+                className="mt-2 w-full rounded-2xl border border-line bg-white px-3 py-2.5 text-sm outline-none"
+              >
+                <option value="">おまかせ（上の選択にあわせる）</option>
+                {voices.map((v) => (
+                  <option key={v.name} value={v.name}>
+                    {v.name} ({v.lang})
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => speak('Hi! Let us have a chat today.', { preset: s.voicePreset, voiceName: s.voiceName })}
+                className="pixel mt-2 w-full rounded-full bg-sky py-2.5 text-xs"
+              >
+                ▶ ためしにきく
+              </button>
+            </details>
           </>
         ) : (
           <p className="mt-2 text-xs text-ink-soft">このブラウザは音声読み上げに対応していません</p>

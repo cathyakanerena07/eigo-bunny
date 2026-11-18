@@ -9,7 +9,7 @@ import SessionResult from '@/components/SessionResult';
 import { itemById } from '@/lib/content/shop';
 import { topicById } from '@/lib/content/topics';
 import { gemsForSession, levelFromXp, xpForSession } from '@/lib/level';
-import { createRecognizer, speak, speechSupported, type Recognizer } from '@/lib/speech';
+import { createRecognizer, speak, speechSupported, stopSpeaking, type Recognizer } from '@/lib/speech';
 import { commitSession, currentStage, setSettings } from '@/lib/storage';
 import { useAppState } from '@/lib/useAppState';
 import type { Session, Turn } from '@/lib/types';
@@ -64,7 +64,9 @@ export default function ChatScreen({ topicId }: { topicId: string }) {
         const next = [...turnsRef.current, turn];
         turnsRef.current = next;
         setTurns(next);
-        if (state.settings.autoSpeak) speak(data.en, state.settings.voiceName);
+        if (state.settings.autoSpeak) {
+          speak(data.en, { preset: state.settings.voicePreset, voiceName: state.settings.voiceName });
+        }
       } catch {
         setError('通信に失敗した');
       } finally {
@@ -87,10 +89,20 @@ export default function ChatScreen({ topicId }: { topicId: string }) {
 
   useEffect(() => () => recRef.current?.dispose(), []);
 
+  // Leaving the tab kills the microphone anyway; end the session cleanly.
+  useEffect(() => {
+    const onHide = () => {
+      if (document.hidden) recRef.current?.stop();
+    };
+    document.addEventListener('visibilitychange', onHide);
+    return () => document.removeEventListener('visibilitychange', onHide);
+  }, []);
+
   const send = useCallback(
     (text: string) => {
       const clean = text.trim();
       if (!clean || thinking) return;
+      recRef.current?.stop();
       const next: Turn[] = [...turnsRef.current, { role: 'user', text: clean, at: Date.now() }];
       turnsRef.current = next;
       setTurns(next);
@@ -106,22 +118,27 @@ export default function ChatScreen({ topicId }: { topicId: string }) {
       recRef.current?.stop();
       return;
     }
-    const rec = createRecognizer({
-      onPartial: setDraft,
-      onFinal: (t) => setDraft(t),
-      onEnd: () => setListening(false),
-      onError: (m) => {
-        setError(m);
-        setListening(false);
-      },
-    });
-    if (!rec) {
+    // One recogniser for the whole screen: it restarts itself between phrases,
+    // and a fresh object per tap is what used to leave the mic stuck.
+    if (!recRef.current) {
+      recRef.current = createRecognizer({
+        onText: setDraft,
+        onStop: (reason) => {
+          setListening(false);
+          if (reason === 'silence') setError('声が聞こえなかったみたい。もう一回マイクをタップしてね');
+          if (reason === 'timeout') setError('長くなったので一度きったよ。続きはマイクをタップしてね');
+        },
+        onError: setError,
+      });
+    }
+    if (!recRef.current) {
       setError('このブラウザは音声入力に対応してないみたい');
       return;
     }
-    recRef.current = rec;
+    setError(null);
+    stopSpeaking();
     setListening(true);
-    rec.start();
+    recRef.current.start();
   }, [listening]);
 
   const finish = useCallback(async () => {
@@ -260,7 +277,7 @@ export default function ChatScreen({ topicId }: { topicId: string }) {
                 {state.settings.showJa && t.ja && <p className="mt-1 text-xs text-ink-soft">{t.ja}</p>}
                 <button
                   type="button"
-                  onClick={() => speak(t.text, state.settings.voiceName)}
+                  onClick={() => speak(t.text, { preset: state.settings.voicePreset, voiceName: state.settings.voiceName })}
                   className="pixel mt-1.5 text-[10px] text-pink-deep"
                 >
                   🔊 もう一回きく
