@@ -181,6 +181,9 @@ export default function SettingsPage() {
           データを消す
         </button>
       </section>
+      <p className="pixel mt-6 text-center text-[10px] text-ink-soft/70">
+        build {process.env.NEXT_PUBLIC_BUILD}
+      </p>
       <div className="h-8" />
     </main>
   );
