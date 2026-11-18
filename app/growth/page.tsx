@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import PixelBunny from '@/components/PixelBunny';
+import PixelIcon from '@/components/PixelIcon';
 import StatPill from '@/components/StatPill';
-import { itemById } from '@/lib/content/shop';
 import { levelFromXp } from '@/lib/level';
-import { currentStage } from '@/lib/storage';
+import { currentStage, wornAccessories } from '@/lib/storage';
 import { STAGE_JA, STAGE_MIN_LEVEL, STAGE_ORDER } from '@/lib/sprites';
 import { useAppState } from '@/lib/useAppState';
 
@@ -29,10 +29,7 @@ export default function GrowthPage() {
   const stage = currentStage(state);
   const stageIndex = STAGE_ORDER.indexOf(stage);
   const totalSec = state.sessions.reduce((n, s) => n + s.durationSec, 0);
-  const accessories = [state.pet.equipped.hat, state.pet.equipped.ribbon, state.pet.equipped.glasses]
-    .map((id) => itemById(id))
-    .filter((i): i is NonNullable<typeof i> => Boolean(i))
-    .map((i) => ({ id: i.id, color: i.color }));
+  const accessories = wornAccessories(state.pet);
 
   return (
     <main className="mx-auto w-full max-w-md px-5 pt-8">
@@ -67,10 +64,14 @@ export default function GrowthPage() {
                   {reached ? (
                     <PixelBunny stage={s} size={42} />
                   ) : (
-                    <span className="pixel text-lg text-ink-soft opacity-50">?</span>
+                    <span className="opacity-25">
+                      <PixelBunny stage={s} size={38} className="grayscale" />
+                    </span>
                   )}
                 </div>
-                <p className="pixel mt-1 text-[9px] text-ink-soft">{reached ? STAGE_JA[s] : '???'}</p>
+                <p className={`pixel mt-1 text-[9px] ${reached ? 'text-ink-soft' : 'text-ink-soft/60'}`}>
+                  {STAGE_JA[s]}
+                </p>
                 <p className="pixel text-[8px] text-ink-soft opacity-70">
                   {STAGE_MIN_LEVEL[s] > 0 ? `Lv.${STAGE_MIN_LEVEL[s]}` : ''}
                 </p>
@@ -87,18 +88,21 @@ export default function GrowthPage() {
         <StatPill label="フレーズ" value={`${state.phrases.length}`} tone="pink" />
       </section>
 
-      {state.words.length > 0 && (
-        <section className="mt-4 rounded-3xl border border-line bg-card p-4">
-          <p className="pixel text-sm">おぼえた単語</p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {state.words.map((w) => (
-              <span key={w} className="rounded-full bg-sky px-2.5 py-1 text-xs">
-                {w}
-              </span>
-            ))}
-          </div>
-        </section>
-      )}
+      <Link
+        href="/words"
+        className="mt-4 flex items-center gap-3 rounded-3xl border border-line bg-card p-4 transition active:scale-[0.99]"
+      >
+        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-sky/60">
+          <PixelIcon name="book" size={22} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="pixel block text-sm">おぼえた単語一覧</span>
+          <span className="block text-xs text-ink-soft">
+            単語 {state.words.length} ・ フレーズ {state.phrases.length}
+          </span>
+        </span>
+        <span className="pixel shrink-0 text-ink-soft">›</span>
+      </Link>
 
       <section className="mt-4">
         <p className="pixel text-sm">かいわ履歴</p>

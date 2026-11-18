@@ -4,13 +4,20 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PixelBunny from '@/components/PixelBunny';
+import PixelIcon from '@/components/PixelIcon';
 import LiveBunny from '@/components/LiveBunny';
 import SessionResult from '@/components/SessionResult';
-import { itemById } from '@/lib/content/shop';
 import { customTopic, topicById } from '@/lib/content/topics';
 import { gemsForSession, levelFromXp, xpForSession } from '@/lib/level';
-import { createRecognizer, speak, speechSupported, stopSpeaking, type Recognizer } from '@/lib/speech';
-import { commitSession, currentStage, setSettings } from '@/lib/storage';
+import {
+  createRecognizer,
+  speak,
+  speakWhenAllowed,
+  speechSupported,
+  stopSpeaking,
+  type Recognizer,
+} from '@/lib/speech';
+import { commitSession, currentStage, setSettings, wornAccessories } from '@/lib/storage';
 import { useAppState } from '@/lib/useAppState';
 import type { Session, Turn } from '@/lib/types';
 
@@ -66,7 +73,10 @@ export default function ChatScreen({ topicId, customText }: { topicId: string; c
         turnsRef.current = next;
         setTurns(next);
         if (state.settings.autoSpeak) {
-          speak(data.en, { preset: state.settings.voicePreset, voiceName: state.settings.voiceName });
+          speakWhenAllowed(data.en, {
+            preset: state.settings.voicePreset,
+            voiceName: state.settings.voiceName,
+          });
         }
       } catch {
         setError('通信に失敗した');
@@ -92,7 +102,10 @@ export default function ChatScreen({ topicId, customText }: { topicId: string; c
     turnsRef.current = [turn];
     setTurns([turn]);
     if (state.settings.autoSpeak) {
-      speak(topic.opener, { preset: state.settings.voicePreset, voiceName: state.settings.voiceName });
+      speakWhenAllowed(topic.opener, {
+        preset: state.settings.voicePreset,
+        voiceName: state.settings.voiceName,
+      });
     }
   }, [state, topic, ask]);
 
@@ -219,10 +232,7 @@ export default function ChatScreen({ topicId, customText }: { topicId: string; c
   }
 
   const stage = currentStage(state);
-  const accessories = [state.pet.equipped.hat, state.pet.equipped.ribbon, state.pet.equipped.glasses]
-    .map((id) => itemById(id))
-    .filter((i): i is NonNullable<typeof i> => Boolean(i))
-    .map((i) => ({ id: i.id, color: i.color }));
+  const accessories = wornAccessories(state.pet);
 
   if (result) {
     return (
@@ -293,7 +303,8 @@ export default function ChatScreen({ topicId, customText }: { topicId: string; c
                   onClick={() => speak(t.text, { preset: state.settings.voicePreset, voiceName: state.settings.voiceName })}
                   className="pixel mt-1.5 text-[10px] text-pink-deep"
                 >
-                  🔊 もう一回きく
+                  <PixelIcon name="speaker" size={13} />
+                  もう一回きく
                 </button>
               </div>
             </div>
@@ -373,7 +384,7 @@ export default function ChatScreen({ topicId, customText }: { topicId: string; c
               className={`grid size-11 shrink-0 place-items-center rounded-2xl text-lg ${listening ? 'bg-pink-deep text-white' : 'bg-sky'}`}
               aria-label="音声入力"
             >
-              🎤
+              <PixelIcon name="mic" size={22} />
             </button>
           )}
           <button
@@ -383,7 +394,7 @@ export default function ChatScreen({ topicId, customText }: { topicId: string; c
             className="pixel grid size-11 shrink-0 place-items-center rounded-2xl bg-pink-deep text-white disabled:opacity-40"
             aria-label="送信"
           >
-            ↑
+            <PixelIcon name="arrow-up" size={18} />
           </button>
         </div>
         <p className="pixel pb-1 pt-1.5 text-center text-[9px] text-ink-soft">

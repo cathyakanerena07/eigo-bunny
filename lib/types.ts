@@ -29,7 +29,14 @@ export type Pet = {
   mood: number;
   gems: number;
   owned: string[];
-  equipped: { hat: string | null; ribbon: string | null; glasses: string | null; room: string };
+  equipped: {
+    hat: string | null;
+    ribbon: string | null;
+    glasses: string | null;
+    scarf: string | null;
+    cheek: string | null;
+    room: string;
+  };
   bornAt: number;
   lastTalkAt: number | null;
   seenStage: Stage;

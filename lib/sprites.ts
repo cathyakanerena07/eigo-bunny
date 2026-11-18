@@ -240,6 +240,139 @@ export const ACCESSORY: Record<string, AccessoryArt> = {
       '...AAAA..AAAA...',
     ],
   },
+  'hat-beanie': {
+    anchor: 'head',
+    row: 3,
+    rows: [
+      '.......CC.......',
+      '...ACCAAAAAAA...',
+      '..AAAAAAAAAAAA..',
+      '..BBBBBBBBBBBB..',
+    ],
+  },
+  'hat-straw': {
+    anchor: 'head',
+    row: 4,
+    rows: [
+      '....ACCAAAAA....',
+      '....AAAAAAAA....',
+      'BBBBBBBBBBBBBBBB',
+    ],
+  },
+  'hat-party': {
+    anchor: 'head',
+    row: 1,
+    rows: [
+      '.......CC.......',
+      '......AAAA......',
+      '.....ACCCCA.....',
+      '....AAAAAAAA....',
+      '...AAAAAAAAAA...',
+      '..BBBBBBBBBBBB..',
+    ],
+  },
+  'hat-headphones': {
+    anchor: 'head',
+    row: 4,
+    rows: [
+      '...AAAAAAAAAA...',
+      '..B..........B..',
+      '.AA..........AA.',
+      '.AC..........CA.',
+      '.AC..........CA.',
+      '.BB..........BB.',
+    ],
+  },
+  'ribbon-big': {
+    anchor: 'head',
+    row: 4,
+    rows: [
+      '..AAAA.BB.AAAA..',
+      '.AAACA.BB.ACAAA.',
+      '..AAAA.BB.AAAA..',
+    ],
+  },
+  'ribbon-flower': {
+    anchor: 'head',
+    row: 3,
+    rows: [
+      '............A...',
+      '...........ACA..',
+      '............B...',
+    ],
+  },
+  'glasses-sun': {
+    anchor: 'eyes',
+    row: -1,
+    rows: [
+      '...AAAA..AAAA...',
+      '...ACAABBAACA...',
+      '...BBBB..BBBB...',
+    ],
+  },
+  'glasses-heart': {
+    anchor: 'eyes',
+    row: -1,
+    rows: [
+      '..AA.AA..AA.AA..',
+      '..ACCCABBACCCA..',
+      '...AAA....AAA...',
+      '....A......A....',
+    ],
+  },
+  'glasses-mask': {
+    anchor: 'eyes',
+    row: -1,
+    rows: [
+      '..AAAAAAAAAAAA..',
+      'BBAACCAAAACCAABB',
+    ],
+  },
+  'scarf-knit': {
+    anchor: 'eyes',
+    row: 4,
+    rows: [
+      '.AACCAACCAACCAA.',
+      '..BBBBBBBBBBBB..',
+      '...AAA..........',
+      '...AA...........',
+    ],
+  },
+  'scarf-bandana': {
+    anchor: 'eyes',
+    row: 4,
+    rows: [
+      '.ACAAACAAACAAAC.',
+      '....AAAAAAAA....',
+      '......BAAB......',
+    ],
+  },
+  'cheek-blush': {
+    anchor: 'eyes',
+    row: 1,
+    rows: [
+      '...CA......AC...',
+      '...AB......BA...',
+    ],
+  },
+  'cheek-freckles': {
+    anchor: 'eyes',
+    row: 1,
+    rows: [
+      '...A.A....A.A...',
+      '....C......C....',
+      '...B........B...',
+    ],
+  },
+  'cheek-star': {
+    anchor: 'eyes',
+    row: 1,
+    rows: [
+      '...........A....',
+      '..........ACA...',
+      '...........B....',
+    ],
+  },
 };
 
 // 12x12 part-based rig. Eyes sit at (3,6) and (8,6), ears on rows 0-2.
@@ -277,6 +410,135 @@ export const ACCESSORY_RIG: Record<string, AccessoryArt> = {
       '..AAA..AAA..',
       '..A.ABBA.A..',
       '..AAA..AAA..',
+    ],
+  },
+  'hat-beanie': {
+    anchor: 'head',
+    row: 2,
+    rows: [
+      '.....CC.....',
+      '..ACAAAAAA..',
+      '.AAAAAAAAAA.',
+      '.BBBBBBBBBB.',
+    ],
+  },
+  'hat-straw': {
+    anchor: 'head',
+    row: 3,
+    rows: [
+      '...ACCAAA...',
+      '...AAAAAA...',
+      'BBBBBBBBBBBB',
+    ],
+  },
+  'hat-party': {
+    anchor: 'head',
+    row: 1,
+    rows: [
+      '.....CC.....',
+      '....AAAA....',
+      '...ACCCCA...',
+      '..AAAAAAAA..',
+      '.BBBBBBBBBB.',
+    ],
+  },
+  'hat-headphones': {
+    anchor: 'head',
+    row: 3,
+    rows: [
+      '..AAAAAAAA..',
+      '.B........B.',
+      'AA........AA',
+      'AC........CA',
+      'BB........BB',
+    ],
+  },
+  'ribbon-big': {
+    anchor: 'head',
+    row: 3,
+    rows: [
+      '.AAA.BB.AAA.',
+      'AACA.BB.ACAA',
+      '.AAA.BB.AAA.',
+    ],
+  },
+  'ribbon-flower': {
+    anchor: 'head',
+    row: 2,
+    rows: [
+      '.........A..',
+      '........ACA.',
+      '.........B..',
+    ],
+  },
+  'glasses-sun': {
+    anchor: 'eyes',
+    row: -1,
+    rows: [
+      '..AAA..AAA..',
+      '..ACAAAACA..',
+      '..BBB..BBB..',
+    ],
+  },
+  'glasses-heart': {
+    anchor: 'eyes',
+    row: -1,
+    rows: [
+      '..A.A..A.A..',
+      '..ACABBACA..',
+      '...A....A...',
+    ],
+  },
+  'glasses-mask': {
+    anchor: 'eyes',
+    row: -1,
+    rows: [
+      '.AAAAAAAAAA.',
+      'BBACAAAACABB',
+    ],
+  },
+  'scarf-knit': {
+    anchor: 'head',
+    row: 9,
+    rows: [
+      '.AACCAACCAA.',
+      '..BBBBBBBB..',
+      '..AA........',
+    ],
+  },
+  'scarf-bandana': {
+    anchor: 'head',
+    row: 9,
+    rows: [
+      '.ACAAACAACA.',
+      '...AAAAAA...',
+      '....BAAB....',
+    ],
+  },
+  'cheek-blush': {
+    anchor: 'head',
+    row: 7,
+    rows: [
+      '..CA....AC..',
+      '..AB....BA..',
+    ],
+  },
+  'cheek-freckles': {
+    anchor: 'head',
+    row: 7,
+    rows: [
+      '..A.A..A.A..',
+      '...C....C...',
+      '..B......B..',
+    ],
+  },
+  'cheek-star': {
+    anchor: 'head',
+    row: 7,
+    rows: [
+      '........A...',
+      '.......ACA..',
+      '........B...',
     ],
   },
 };

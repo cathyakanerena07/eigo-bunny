@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { Accessory } from '@/components/Bunny';
 import PixelBunny from '@/components/PixelBunny';
+import PixelIcon from '@/components/PixelIcon';
 import type { Stage } from '@/lib/sprites';
 import type { Session } from '@/lib/types';
 
@@ -25,7 +26,10 @@ export default function SessionResult({
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center px-5 pt-10">
       {leveledTo && (
         <div className="pop mb-2 rounded-full bg-cream px-5 py-2 shadow-sm">
-          <p className="pixel text-base">⭐️ レベルアップ！ Lv. {leveledTo}</p>
+          <p className="pixel flex items-center justify-center gap-1.5 text-base">
+            <PixelIcon name="star" size={16} />
+            レベルアップ！ Lv. {leveledTo}
+          </p>
         </div>
       )}
 

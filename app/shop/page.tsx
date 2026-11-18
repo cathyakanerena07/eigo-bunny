@@ -1,12 +1,13 @@
 'use client';
 
 import ItemPreview from '@/components/ItemPreview';
+import PixelIcon from '@/components/PixelIcon';
 import PixelBunny from '@/components/PixelBunny';
-import { SHOP_ITEMS, SLOT_JA, itemById, type ShopSlot } from '@/lib/content/shop';
-import { buyItem, currentStage, equipItem } from '@/lib/storage';
+import { SHOP_ITEMS, SLOT_JA, type ShopSlot } from '@/lib/content/shop';
+import { buyItem, currentStage, equipItem, wornAccessories } from '@/lib/storage';
 import { useAppState } from '@/lib/useAppState';
 
-const SLOTS: ShopSlot[] = ['hat', 'ribbon', 'glasses', 'room'];
+const SLOTS = Object.keys(SLOT_JA) as ShopSlot[];
 
 export default function ShopPage() {
   const { state, refresh } = useAppState();
@@ -21,10 +22,7 @@ export default function ShopPage() {
 
   const { pet } = state;
   const stage = currentStage(state);
-  const accessories = [pet.equipped.hat, pet.equipped.ribbon, pet.equipped.glasses]
-    .map((id) => itemById(id))
-    .filter((i): i is NonNullable<typeof i> => Boolean(i))
-    .map((i) => ({ id: i.id, color: i.color }));
+  const accessories = wornAccessories(pet);
 
   const owned = new Set([...pet.owned, 'room-day']);
 
@@ -33,7 +31,8 @@ export default function ShopPage() {
       <div className="flex items-center justify-between">
         <h1 className="pixel text-xl">ショップ</h1>
         <span className="pixel flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 text-sm">
-          💎 <span className="tabular-nums">{pet.gems}</span>
+          <PixelIcon name="gem" size={15} className="text-sky-deep" />
+          <span className="tabular-nums">{pet.gems}</span>
         </span>
       </div>
       <p className="mt-1 text-xs text-ink-soft">会話するともらえるジェムで、きせかえできるよ</p>
@@ -84,7 +83,10 @@ export default function ShopPage() {
                         }}
                         className="pixel mt-2 w-full rounded-full bg-cream py-2 text-[11px] disabled:opacity-45"
                       >
-                        💎 {item.price}
+                        <span className="inline-flex items-center justify-center gap-1.5">
+                          <PixelIcon name="gem" size={13} className="text-sky-deep" />
+                          {item.price}
+                        </span>
                       </button>
                     )}
                   </li>

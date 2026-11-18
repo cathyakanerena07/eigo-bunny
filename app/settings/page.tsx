@@ -83,7 +83,6 @@ export default function SettingsPage() {
         {[
           { key: 'showJa' as const, label: '日本語訳をだす', on: s.showJa },
           { key: 'autoSpeak' as const, label: 'うさぎの声を自動でながす', on: s.autoSpeak },
-          { key: 'bgm' as const, label: 'ホームでBGMをながす', on: s.bgm },
         ].map((row) => (
           <button
             key={row.key}
@@ -122,8 +121,8 @@ export default function SettingsPage() {
                     s.voicePreset === v.id ? 'border-pink-deep bg-pink/40' : 'border-line bg-white'
                   }`}
                 >
-                  <span className="block text-lg">{v.emoji}</span>
-                  <span className="pixel mt-1 block text-[10px] leading-tight">{v.ja}</span>
+                  <span className="pixel block text-[11px] leading-tight">{v.ja}</span>
+                  <span className="mt-1 block text-[10px] leading-tight text-ink-soft">{v.note}</span>
                 </button>
               ))}
             </div>

@@ -138,7 +138,6 @@ export function createBgm(): Bgm | null {
 
   return {
     unlock() {
-      keepSessionAwake();
       const c = ensureCtx();
       if (c.state !== 'running') void c.resume();
     },
@@ -179,7 +178,12 @@ export function createBgm(): Bgm | null {
     },
     duck(on: boolean) {
       ducked = on;
-      if (!master || !ctx || !running) return;
+      if (!running) return;
+      // iOS hands the audio session to whoever is holding a media element, and
+      // that starves speechSynthesis — so let go of it while the bunny talks.
+      if (on) silent?.pause();
+      else keepSessionAwake();
+      if (!master || !ctx) return;
       master.gain.cancelScheduledValues(ctx.currentTime);
       master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
       master.gain.linearRampToValueAtTime(Math.max(level(), 0.0001), ctx.currentTime + 0.18);

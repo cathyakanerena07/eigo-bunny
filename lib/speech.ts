@@ -19,13 +19,20 @@ export function englishVoices(): SpeechSynthesisVoice[] {
 
 export type VoicePreset = 'girl' | 'boy' | 'teen-girl' | 'teen-boy' | 'woman' | 'man';
 
-export const VOICE_PRESETS: { id: VoicePreset; ja: string; emoji: string; gender: 'f' | 'm'; pitch: number; rate: number }[] = [
-  { id: 'girl', ja: '女の子', emoji: '🎀', gender: 'f', pitch: 1.75, rate: 0.95 },
-  { id: 'boy', ja: '男の子', emoji: '⚽️', gender: 'm', pitch: 1.6, rate: 0.97 },
-  { id: 'teen-girl', ja: '高校生（女）', emoji: '🎒', gender: 'f', pitch: 1.3, rate: 1.0 },
-  { id: 'teen-boy', ja: '高校生（男）', emoji: '🎧', gender: 'm', pitch: 1.1, rate: 1.0 },
-  { id: 'woman', ja: '大人（女）', emoji: '☕️', gender: 'f', pitch: 1.0, rate: 0.95 },
-  { id: 'man', ja: '大人（男）', emoji: '🧥', gender: 'm', pitch: 0.8, rate: 0.93 },
+export const VOICE_PRESETS: {
+  id: VoicePreset;
+  ja: string;
+  note: string;
+  gender: 'f' | 'm';
+  pitch: number;
+  rate: number;
+}[] = [
+  { id: 'girl', ja: '女の子', note: 'たかい', gender: 'f', pitch: 1.75, rate: 0.95 },
+  { id: 'boy', ja: '男の子', note: 'げんき', gender: 'm', pitch: 1.6, rate: 0.97 },
+  { id: 'teen-girl', ja: '高校生（女）', note: 'すこし低め', gender: 'f', pitch: 1.3, rate: 1.0 },
+  { id: 'teen-boy', ja: '高校生（男）', note: 'すこし低め', gender: 'm', pitch: 1.1, rate: 1.0 },
+  { id: 'woman', ja: '大人（女）', note: 'おちつき', gender: 'f', pitch: 1.0, rate: 0.95 },
+  { id: 'man', ja: '大人（男）', note: 'ひくい', gender: 'm', pitch: 0.8, rate: 0.93 },
 ];
 
 // Apple and Google ship these under fixed names; matching by name is the only
@@ -58,6 +65,11 @@ export function unlockSpeech(): void {
   const u = new SpeechSynthesisUtterance(' ');
   u.volume = 0;
   window.speechSynthesis.speak(u);
+  window.speechSynthesis.resume();
+}
+
+export function speechUnlocked(): boolean {
+  return unlocked;
 }
 
 export function speak(text: string, options: SpeakOptions = {}): void {
@@ -80,6 +92,28 @@ export function speak(text: string, options: SpeakOptions = {}): void {
   u.onerror = () => bgm?.duck(false);
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(u);
+  // Safari parks the queue on its own; resuming an already-running queue is a no-op.
+  window.speechSynthesis.resume();
+}
+
+// iOS refuses an utterance that did not come from a tap, and gives no error for
+// it — so if it never started, say it on the next tap instead.
+export function speakWhenAllowed(text: string, options: SpeakOptions = {}): () => void {
+  let started = false;
+  const go = () =>
+    speak(text, {
+      ...options,
+      onStart: () => {
+        started = true;
+        options.onStart?.();
+      },
+    });
+  go();
+  const retry = () => {
+    if (!started) go();
+  };
+  window.addEventListener('pointerdown', retry, { once: true });
+  return () => window.removeEventListener('pointerdown', retry);
 }
 
 export function stopSpeaking(): void {

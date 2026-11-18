@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import PixelBunny from '@/components/PixelBunny';
+import PixelIcon, { type IconName } from '@/components/PixelIcon';
 import LiveBunny from '@/components/LiveBunny';
 import Room, { type RoomVariant } from '@/components/Room';
 import { TOPICS, nextTopic } from '@/lib/content/topics';
-import { itemById } from '@/lib/content/shop';
 import { levelFromXp } from '@/lib/level';
-import { speak } from '@/lib/speech';
-import { currentStage, dayKey, moodNow, setSettings } from '@/lib/storage';
+import { speakWhenAllowed } from '@/lib/speech';
+import { currentStage, dayKey, moodNow, setSettings, wornAccessories } from '@/lib/storage';
 import { STAGE_JA, STAGE_MIN_LEVEL, STAGE_ORDER } from '@/lib/sprites';
 import { useAppState } from '@/lib/useAppState';
 
@@ -19,10 +19,10 @@ const GREETINGS = [
   { en: "I'm a bit sleepy...\nTalk to me?", mood: 0 },
 ];
 
-function moodFace(mood: number): string {
-  if (mood >= 70) return '😊';
-  if (mood >= 40) return '🙂';
-  return '😴';
+function moodFace(mood: number): IconName {
+  if (mood >= 70) return 'face-happy';
+  if (mood >= 40) return 'face-ok';
+  return 'face-sleep';
 }
 
 export default function HomePage() {
@@ -40,29 +40,19 @@ export default function HomePage() {
 
   const sayHello = useCallback(() => {
     if (!hello || !voice) return;
-    speak(hello.replace('\n', ' '), { preset: voice.voicePreset, voiceName: voice.voiceName });
+    speakWhenAllowed(hello.replace('\n', ' '), {
+      preset: voice.voicePreset,
+      voiceName: voice.voiceName,
+    });
   }, [hello, voice]);
 
-  // iOS blocks the first utterance until something has been tapped, so if the
-  // greeting on open does not actually start, it rides on the next tap.
   useEffect(() => {
     if (!hello || !voice?.autoSpeak || greeted.current) return;
-    let started = false;
-    const say = () =>
-      speak(hello.replace('\n', ' '), {
-        preset: voice.voicePreset,
-        voiceName: voice.voiceName,
-        onStart: () => {
-          started = true;
-          greeted.current = true;
-        },
-      });
-    say();
-    const retry = () => {
-      if (!started) say();
-    };
-    window.addEventListener('pointerdown', retry, { once: true });
-    return () => window.removeEventListener('pointerdown', retry);
+    greeted.current = true;
+    return speakWhenAllowed(hello.replace('\n', ' '), {
+      preset: voice.voicePreset,
+      voiceName: voice.voiceName,
+    });
   }, [hello, voice]);
 
   if (!state) {
@@ -79,10 +69,7 @@ export default function HomePage() {
   const mood = moodNow(pet);
   const room = (pet.equipped.room ?? 'room-day') as RoomVariant;
 
-  const accessories = [pet.equipped.hat, pet.equipped.ribbon, pet.equipped.glasses]
-    .map((id) => itemById(id))
-    .filter((i): i is NonNullable<typeof i> => Boolean(i))
-    .map((i) => ({ id: i.id, color: i.color }));
+  const accessories = wornAccessories(pet);
 
   const greeting = GREETINGS.find((g) => mood >= g.mood) ?? GREETINGS[GREETINGS.length - 1];
   const seed = today ? Number(today.replaceAll('-', '')) % TOPICS.length : 0;
@@ -116,19 +103,23 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => {
-                setSettings({ bgm: !state.settings.bgm });
+                const on = !state.settings.bgm;
+                setSettings({ bgm: on });
                 refresh();
+                // Turning the sound on is a tap, which is the one moment iOS
+                // will let the bunny speak — so let her say hello right then.
+                if (on) sayHello();
               }}
-              className={`grid size-10 place-items-center rounded-2xl text-base shadow-sm backdrop-blur ${state.settings.bgm ? 'bg-cream' : 'bg-card/90'}`}
+              className={`grid size-10 place-items-center rounded-2xl shadow-sm backdrop-blur ${state.settings.bgm ? 'bg-cream' : 'bg-card/90'}`}
               aria-label={state.settings.bgm ? 'BGMをとめる' : 'BGMをながす'}
             >
-              {state.settings.bgm ? '🎵' : '🔇'}
+              <PixelIcon name={state.settings.bgm ? 'note' : 'mute'} size={20} />
             </button>
             <Link
               href="/shop"
               className="flex items-center gap-1.5 rounded-2xl bg-card/90 px-3 py-2 shadow-sm backdrop-blur"
             >
-              <span className="text-sm">💎</span>
+              <PixelIcon name="gem" size={16} className="text-sky-deep" />
               <span className="pixel text-sm tabular-nums">{pet.gems}</span>
             </Link>
           </div>
@@ -157,7 +148,7 @@ export default function HomePage() {
 
         <div className="absolute bottom-4 right-4 flex items-center gap-2 rounded-2xl bg-card/90 px-3 py-2 shadow-sm backdrop-blur">
           <span className="pixel text-[10px] text-ink-soft">ごきげん</span>
-          <span className="text-sm">{moodFace(mood)}</span>
+          <PixelIcon name={moodFace(mood)} size={16} />
           <span className="block h-2 w-12 overflow-hidden rounded-full bg-line">
             <span className="block h-full rounded-full bg-cream" style={{ width: `${mood}%`, background: '#ffd84d' }} />
           </span>
@@ -185,7 +176,10 @@ export default function HomePage() {
         </div>
 
         <div className="mt-4 rounded-3xl border border-line bg-card p-5">
-          <p className="pixel text-sm">🌱 いまの成長</p>
+          <p className="pixel flex items-center gap-1.5 text-sm">
+            <PixelIcon name="sprout" size={16} className="text-ink-soft" />
+            いまの成長
+          </p>
           <div className="mt-3 flex items-center gap-3">
             <span className="pixel shrink-0 text-base">Lv. {lv.level}</span>
             <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-line">
@@ -213,10 +207,12 @@ export default function HomePage() {
                     {reached ? (
                       <PixelBunny stage={s} size={38} className="mx-auto" />
                     ) : (
-                      <span className="pixel grid h-[38px] place-items-center text-lg text-ink-soft opacity-50">?</span>
+                      <span className="grid h-[38px] place-items-center opacity-25">
+                        <PixelBunny stage={s} size={34} className="grayscale" />
+                      </span>
                     )}
-                    <span className="pixel mt-1 block text-[9px] text-ink-soft">
-                      {reached ? STAGE_JA[s] : '???'}
+                    <span className={`pixel mt-1 block text-[9px] ${reached ? 'text-ink-soft' : 'text-ink-soft/60'}`}>
+                      {STAGE_JA[s]}
                     </span>
                   </div>
                 </div>
@@ -230,6 +226,7 @@ export default function HomePage() {
             はじめて話すと、たまごからかえるよ
           </p>
         )}
+        <div className="h-8" />
       </section>
     </main>
   );

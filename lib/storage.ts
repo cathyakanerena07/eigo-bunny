@@ -1,3 +1,4 @@
+import { itemById, SHOP_ITEMS, type ShopSlot } from './content/shop';
 import { levelFromXp } from './level';
 import { stageFromLevel, type Stage } from './sprites';
 import type { AppState, Pet, Session, Settings } from './types';
@@ -11,7 +12,7 @@ export const DEFAULT_STATE: AppState = {
     mood: 80,
     gems: 120,
     owned: [],
-    equipped: { hat: null, ribbon: null, glasses: null, room: 'room-day' },
+    equipped: { hat: null, ribbon: null, glasses: null, scarf: null, cheek: null, room: 'room-day' },
     bornAt: 0,
     lastTalkAt: null,
     seenStage: 'egg',
@@ -42,7 +43,11 @@ export function loadState(): AppState {
     return {
       ...base,
       ...parsed,
-      pet: { ...base.pet, ...(parsed.pet ?? {}) },
+      pet: {
+        ...base.pet,
+        ...(parsed.pet ?? {}),
+        equipped: { ...base.pet.equipped, ...(parsed.pet?.equipped ?? {}) },
+      },
       settings: { ...base.settings, ...(parsed.settings ?? {}) },
       memory: { ...base.memory, ...(parsed.memory ?? {}) },
     };
@@ -79,6 +84,16 @@ export function moodNow(pet: Pet, now = Date.now()): number {
   if (!pet.lastTalkAt) return pet.mood;
   const days = Math.floor((now - pet.lastTalkAt) / 86_400_000);
   return Math.max(10, Math.min(100, pet.mood - days * 12));
+}
+
+const WEARABLE: ShopSlot[] = Array.from(
+  new Set(SHOP_ITEMS.filter((i) => i.slot !== 'room').map((i) => i.slot)),
+);
+
+export function wornAccessories(pet: Pet): { id: string; color: string }[] {
+  return WEARABLE.map((slot) => itemById(pet.equipped[slot]))
+    .filter((i): i is NonNullable<typeof i> => Boolean(i))
+    .map((i) => ({ id: i.id, color: i.color }));
 }
 
 export function setSettings(patch: Partial<Settings>): AppState {
@@ -126,7 +141,7 @@ export function buyItem(id: string, price: number): AppState {
   });
 }
 
-export function equipItem(slot: 'hat' | 'ribbon' | 'glasses' | 'room', id: string | null): AppState {
+export function equipItem(slot: ShopSlot, id: string | null): AppState {
   return updateState((s) => ({
     ...s,
     pet: {
