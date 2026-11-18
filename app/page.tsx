@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import PixelBunny from '@/components/PixelBunny';
 import PixelIcon, { type IconName } from '@/components/PixelIcon';
@@ -8,7 +8,7 @@ import LiveBunny from '@/components/LiveBunny';
 import Room, { type RoomVariant } from '@/components/Room';
 import { TOPICS, nextTopic } from '@/lib/content/topics';
 import { levelFromXp } from '@/lib/level';
-import { speakWhenAllowed } from '@/lib/speech';
+import { speak } from '@/lib/speech';
 import { currentStage, dayKey, moodNow, setSettings, wornAccessories } from '@/lib/storage';
 import { STAGE_JA, STAGE_MIN_LEVEL, STAGE_ORDER } from '@/lib/sprites';
 import { useAppState } from '@/lib/useAppState';
@@ -19,10 +19,6 @@ const GREETINGS = [
   { en: "I'm a bit sleepy...\nTalk to me?", mood: 0 },
 ];
 
-// Once per app launch, not once per visit to the home tab: coming back from a
-// lesson should not make her greet you again, least of all over your music.
-let greetedThisLaunch = false;
-
 function moodFace(mood: number): IconName {
   if (mood >= 70) return 'face-happy';
   if (mood >= 40) return 'face-ok';
@@ -32,7 +28,6 @@ function moodFace(mood: number): IconName {
 export default function HomePage() {
   const { state, refresh } = useAppState();
   const [today, setToday] = useState<string | null>(null);
-  const greeted = useRef(greetedThisLaunch);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -42,19 +37,11 @@ export default function HomePage() {
   const hello = state ? (GREETINGS.find((g) => moodNow(state.pet) >= g.mood) ?? GREETINGS[2]).en : '';
   const voice = state?.settings;
 
+  // Only ever on a tap. Greeting you unasked means interrupting whatever you
+  // were listening to, every single time the app opens.
   const sayHello = useCallback(() => {
     if (!hello || !voice) return;
-    speakWhenAllowed(hello.replace('\n', ' '), {
-      preset: voice.voicePreset,
-      voiceName: voice.voiceName,
-    });
-  }, [hello, voice]);
-
-  useEffect(() => {
-    if (!hello || !voice?.autoSpeak || greeted.current) return;
-    greeted.current = true;
-    greetedThisLaunch = true;
-    return speakWhenAllowed(hello.replace('\n', ' '), {
+    speak(hello.replace('\n', ' '), {
       preset: voice.voicePreset,
       voiceName: voice.voiceName,
     });
@@ -134,9 +121,13 @@ export default function HomePage() {
           type="button"
           onClick={sayHello}
           className="relative mx-auto mt-4 block w-fit max-w-[80%] rounded-2xl border-2 border-dark bg-card px-4 py-2.5 shadow-sm active:translate-y-px"
-          aria-label="もういちど聞く"
+          aria-label="こえで聞く"
         >
           <p className="pixel whitespace-pre-line text-center text-sm leading-snug">{greeting.en}</p>
+          <span className="pixel mt-1 flex items-center justify-center gap-1 text-[9px] text-ink-soft">
+            <PixelIcon name="speaker" size={10} />
+            タップで聞く
+          </span>
           <span className="absolute -bottom-2 left-1/2 size-3 -translate-x-1/2 rotate-45 border-b-2 border-r-2 border-dark bg-card" />
         </button>
 
