@@ -212,6 +212,14 @@ a {
 
 .bn-enter { animation: bn-enter 180ms ease-out both; }
 
+/* The roaming layer carries the bunny across the room; the pose cycles inside it. */
+.roam {
+  display: block;
+  will-change: transform;
+  transition: transform var(--roam-ms, 0ms) cubic-bezier(0.45, 0, 0.55, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bn, .bn-enter { animation: none !important; }
+  .roam { transition: none; }
 }

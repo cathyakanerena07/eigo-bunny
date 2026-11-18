@@ -115,6 +115,7 @@ export default function HomePage() {
             accessories={accessories}
             size={190}
             interactive
+            roam
           />
         </div>
 

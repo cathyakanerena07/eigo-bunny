@@ -29,6 +29,8 @@ type Props = {
   size?: number;
   /** Tap reactions, random idle activities and the sleep ladder. */
   interactive?: boolean;
+  /** Let the bunny wander across its container between activities. */
+  roam?: boolean;
   className?: string;
 };
 
@@ -38,14 +40,19 @@ export default function LiveBunny({
   accessories = [],
   size = 190,
   interactive = false,
+  roam = false,
   className = '',
 }: Props) {
-  const { frame, rig, motion, motionMs, tapHandlers } = useBunnyAnimator(state, { interactive });
+  const { frame, rig, place, motion, motionMs, tapHandlers } = useBunnyAnimator(state, {
+    interactive,
+    roam,
+  });
   const scaled = Math.round(size * STAGE_SCALE[stage]);
 
   const pose: Pose = frame?.pose ?? (rig ? (MOOD_POSE[rig] ?? 'normal') : 'normal');
+  const flipped = (frame?.flip ? -1 : 1) * place.facing < 0;
 
-  const content =
+  const body =
     stage === 'egg' ? (
       <Bunny stage="egg" size={scaled} className={className} />
     ) : (
@@ -58,10 +65,21 @@ export default function LiveBunny({
           talking={rig === 'talking'}
           accessories={accessories}
           size={scaled}
-          className={`${frame?.flip ? 'scale-x-[-1]' : ''} ${className}`}
+          className={`${flipped ? 'scale-x-[-1]' : ''} ${className}`}
         />
       </span>
     );
+
+  const content = roam ? (
+    <span
+      className="roam"
+      style={{ transform: `translateX(${place.x}%)`, ['--roam-ms' as string]: `${place.ms}ms` }}
+    >
+      {body}
+    </span>
+  ) : (
+    body
+  );
 
   if (!interactive) return content;
 

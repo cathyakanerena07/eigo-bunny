@@ -152,7 +152,9 @@ export const STATES: Record<BunnyState, StateDef> = {
 };
 
 /** One-shot idle activities. Every remaining pose gets screen time here. */
-export const IDLE_ACTIVITIES: { id: string; frames: Frame[]; ms: number; motion: Motion; motionMs?: number }[] = [
+export type Activity = { id: string; frames: Frame[]; ms: number; motion: Motion; motionMs?: number };
+
+export const IDLE_ACTIVITIES: Activity[] = [
   {
     id: 'look-around',
     ms: 2600,
@@ -169,7 +171,6 @@ export const IDLE_ACTIVITIES: { id: string; frames: Frame[]; ms: number; motion:
   { id: 'play', ms: 2600, motion: 'hop', motionMs: 860, frames: [{ pose: 'play', ms: 430 }, { pose: 'normal', ms: 430 }] },
   { id: 'shy', ms: 2000, motion: 'bob', motionMs: 2000, frames: [{ pose: 'shy', ms: 1300 }, { pose: 'normal', ms: 600 }] },
   { id: 'stretch', ms: 2400, motion: 'settle', motionMs: 2400, frames: [{ pose: 'sit', ms: 1500 }, { pose: 'normal', ms: 700 }] },
-  { id: 'walk-by', ms: 3000, motion: 'travel', motionMs: 3000, frames: [{ pose: 'walk', ms: 300 }, { pose: 'normal', ms: 260 }] },
   { id: 'smile', ms: 1700, motion: 'bob', motionMs: 1700, frames: [{ pose: 'smile', ms: 1000 }, { pose: 'normal', ms: 500 }] },
 
   { id: 'spin', ms: 1800, motion: 'spin', motionMs: 900, frames: [{ pose: 'glad', ms: 450 }, { pose: 'smile', ms: 450 }] },
@@ -178,7 +179,6 @@ export const IDLE_ACTIVITIES: { id: string; frames: Frame[]; ms: number; motion:
   { id: 'thanks', ms: 2000, motion: 'nod', motionMs: 1000, frames: [{ pose: 'thanks', ms: 1100 }, { pose: 'smile', ms: 600 }] },
   { id: 'peekaboo', ms: 2200, motion: 'peek', motionMs: 1100, frames: [{ pose: 'surprised', ms: 520 }, { pose: 'glad', ms: 520 }] },
   { id: 'call-out', ms: 2100, motion: 'shake', motionMs: 700, frames: [{ pose: 'call', ms: 700 }, { pose: 'normal', ms: 500 }] },
-  { id: 'run-by', ms: 2400, motion: 'drift', motionMs: 2400, frames: [{ pose: 'run', ms: 190 }, { pose: 'normal', ms: 160 }] },
   { id: 'bye', ms: 2000, motion: 'sway', motionMs: 1000, frames: [{ pose: 'bye', ms: 520 }, { pose: 'wave', ms: 480 }] },
   { id: 'grumble', ms: 1700, motion: 'shake', motionMs: 560, frames: [{ pose: 'angry', ms: 420 }, { pose: 'normal', ms: 420 }] },
   { id: 'flop', ms: 3000, motion: 'settle', motionMs: 1400, frames: [{ pose: 'sit', ms: 900 }, { pose: 'liedown', ms: 1600 }] },
@@ -187,6 +187,22 @@ export const IDLE_ACTIVITIES: { id: string; frames: Frame[]; ms: number; motion:
   { id: 'wiggle-butt', ms: 2000, motion: 'wiggle', motionMs: 420, frames: [{ pose: 'normal', ms: 420, flip: true }, { pose: 'normal', ms: 420 }] },
   { id: 'nibble', ms: 2600, motion: 'nod', motionMs: 620, frames: [{ pose: 'eat', ms: 320 }, { pose: 'smile', ms: 300 }] },
 ];
+
+/**
+ * Trips across the room. The pose cycle plays in place while a separate layer
+ * carries the bunny to a new spot, so the legs move at their own speed.
+ */
+export const ROAM_ACTIVITIES: Activity[] = [
+  { id: 'walk-by', ms: 3400, motion: 'bob', motionMs: 560, frames: [{ pose: 'walk', ms: 300 }, { pose: 'normal', ms: 260 }] },
+  { id: 'stroll', ms: 4200, motion: 'bob', motionMs: 700, frames: [{ pose: 'walk', ms: 380 }, { pose: 'smile', ms: 320 }] },
+  { id: 'run-by', ms: 1800, motion: 'bob', motionMs: 350, frames: [{ pose: 'run', ms: 190 }, { pose: 'normal', ms: 160 }] },
+  { id: 'hop-over', ms: 2600, motion: 'hop', motionMs: 650, frames: [{ pose: 'jump', ms: 330 }, { pose: 'normal', ms: 320 }] },
+];
+
+/** How often an idle turn is a trip across the room rather than a gesture. */
+export const ROAM_CHANCE = 0.5;
+/** Furthest the bunny strays from the middle, as a share of its own width. */
+export const ROAM_SPAN = 46;
 
 /** Tap, double-tap and hold reactions. */
 export type Reaction = { frames: Frame[]; ms: number; motion: Motion; motionMs?: number };

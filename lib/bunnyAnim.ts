@@ -7,6 +7,9 @@ import {
   IDLE_MAX_MS,
   IDLE_MIN_MS,
   REACTIONS,
+  ROAM_ACTIVITIES,
+  ROAM_CHANCE,
+  ROAM_SPAN,
   SLEEPING_AFTER_MS,
   SLEEPY_AFTER_MS,
   STATES,
@@ -57,10 +60,14 @@ function programFor(state: BunnyState, now: number): Program {
   };
 }
 
-type Options = { interactive?: boolean };
+/** Where the bunny stands, as a share of its own width either side of centre. */
+export type Place = { x: number; facing: 1 | -1; ms: number };
+
+type Options = { interactive?: boolean; roam?: boolean };
 
 export function useBunnyAnimator(base: BunnyState, options: Options = {}) {
   const interactive = options.interactive ?? false;
+  const roaming = options.roam ?? false;
 
   const [frame, setFrame] = useState<Frame | null>(null);
   const [rig, setRig] = useState<RigMood | null>(STATES[base].rig ?? null);
@@ -77,6 +84,8 @@ export function useBunnyAnimator(base: BunnyState, options: Options = {}) {
   const nextIdleAt = useRef(0);
   const lastActivity = useRef<string | null>(null);
   const baseRef = useRef(base);
+  const [place, setPlace] = useState<Place>({ x: 0, facing: 1, ms: 0 });
+  const placeX = useRef(0);
 
   const stopFrames = () => {
     if (frameTimer.current) clearTimeout(frameTimer.current);
@@ -163,6 +172,11 @@ export function useBunnyAnimator(base: BunnyState, options: Options = {}) {
               : null;
 
       if (wanted) {
+        if (roaming && placeX.current !== 0) {
+          const facing: 1 | -1 = placeX.current > 0 ? -1 : 1;
+          placeX.current = 0;
+          setPlace({ x: 0, facing, ms: 2400 });
+        }
         const want = programFor(wanted, now);
         if (cur.rig !== want.rig || cur.frames !== want.frames) {
           apply({ ...want, priority: 1, until: null, cycleKey: now });
@@ -172,11 +186,30 @@ export function useBunnyAnimator(base: BunnyState, options: Options = {}) {
 
       if (now < nextIdleAt.current || reduced()) return;
 
-      let pick = IDLE_ACTIVITIES[Math.floor(Math.random() * IDLE_ACTIVITIES.length)];
+      const trip = roaming && Math.random() < ROAM_CHANCE;
+      const pool = trip ? ROAM_ACTIVITIES : IDLE_ACTIVITIES;
+      let pick = pool[Math.floor(Math.random() * pool.length)];
       if (pick.id === lastActivity.current) {
-        pick = IDLE_ACTIVITIES[(IDLE_ACTIVITIES.indexOf(pick) + 1) % IDLE_ACTIVITIES.length];
+        pick = pool[(pool.indexOf(pick) + 1) % pool.length];
       }
       lastActivity.current = pick.id;
+
+      if (trip) {
+        // Left / middle / right, never the zone it is already in: a destination
+        // too close to the current spot reads as a twitch, not a walk.
+        const edge = ROAM_SPAN * 0.33;
+        const zone = placeX.current < -edge ? -1 : placeX.current > edge ? 1 : 0;
+        const options = [-1, 0, 1].filter((z) => z !== zone);
+        const target = options[Math.floor(Math.random() * options.length)];
+        const to = Math.round(
+          target === 0
+            ? (Math.random() * 2 - 1) * ROAM_SPAN * 0.18
+            : target * ROAM_SPAN * (0.62 + Math.random() * 0.38),
+        );
+        const facing: 1 | -1 = to < placeX.current ? -1 : 1;
+        placeX.current = to;
+        setPlace({ x: to, facing, ms: pick.ms });
+      }
       apply({
         priority: 1,
         frames: pick.frames,
@@ -190,7 +223,7 @@ export function useBunnyAnimator(base: BunnyState, options: Options = {}) {
     }, TICK_MS);
 
     return () => clearInterval(id);
-  }, [interactive, apply, scheduleIdle]);
+  }, [interactive, roaming, apply, scheduleIdle]);
 
   const wake = useCallback(
     (kind: 'tap' | 'spam' | 'hold') => {
@@ -250,6 +283,7 @@ export function useBunnyAnimator(base: BunnyState, options: Options = {}) {
   return {
     frame,
     rig,
+    place,
     ...visual,
     tapHandlers: { onPointerDown, onPointerUp, onPointerCancel: onPointerUp },
   };
