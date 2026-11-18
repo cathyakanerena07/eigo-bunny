@@ -151,6 +151,9 @@ export function createBgm(): Bgm | null {
       if (c.state !== 'running') await c.resume();
       if (!running) return;
       if (timer) clearInterval(timer);
+      // Reconnecting an already-connected node is a no-op, so this is just the
+      // undo for the disconnect in stop().
+      master!.connect(c.destination);
       master!.gain.cancelScheduledValues(c.currentTime);
       master!.gain.value = level();
       step = 0;
@@ -163,11 +166,20 @@ export function createBgm(): Bgm | null {
       silent?.pause();
       if (timer) clearInterval(timer);
       timer = null;
-      if (master && ctx) {
-        master.gain.cancelScheduledValues(ctx.currentTime);
-        master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
-        master.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
-      }
+      if (!master || !ctx) return;
+      const c = ctx;
+      const m = master;
+      m.gain.cancelScheduledValues(c.currentTime);
+      m.gain.setValueAtTime(m.gain.value, c.currentTime);
+      m.gain.linearRampToValueAtTime(0.0001, c.currentTime + 0.2);
+      // A gain of zero still leaves up to SCHEDULE_AHEAD seconds of notes
+      // queued, and Safari does not always honour a ramp it is mid-way through.
+      // Cutting the graph and stopping the clock cannot be argued with.
+      window.setTimeout(() => {
+        if (running) return;
+        m.disconnect();
+        if (c.state === 'running') void c.suspend();
+      }, 240);
     },
     pauseForBackground() {
       if (timer) clearInterval(timer);
