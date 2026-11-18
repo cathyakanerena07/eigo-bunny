@@ -116,12 +116,14 @@ export default function ChatScreen({ topicId, customText }: { topicId: string; c
 
   useEffect(() => () => recRef.current?.dispose(), []);
 
-  // Only inside a lesson: this is the one screen where the bunny talking is the
-  // whole point, so taking the audio session here is not rude.
+  // Only inside a lesson, and only when she is allowed to talk: touching the
+  // audio session at all is what takes other apps' sound away.
+  const canSpeak = state?.settings.autoSpeak ?? false;
   useEffect(() => {
+    if (!canSpeak) return;
     window.addEventListener('pointerdown', unlockSpeech, { capture: true });
     return () => window.removeEventListener('pointerdown', unlockSpeech, { capture: true });
-  }, []);
+  }, [canSpeak]);
 
   // Leaving the tab kills the microphone anyway; end the session cleanly.
   useEffect(() => {
@@ -308,6 +310,7 @@ export default function ChatScreen({ topicId, customText }: { topicId: string; c
                 {state.settings.showJa && t.ja && <p className="mt-1 text-xs text-ink-soft">{t.ja}</p>}
                 <button
                   type="button"
+                  hidden={!state.settings.autoSpeak}
                   onClick={() => speak(t.text, { preset: state.settings.voicePreset, voiceName: state.settings.voiceName })}
                   className="pixel mt-1.5 text-[10px] text-pink-deep"
                 >

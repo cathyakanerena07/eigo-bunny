@@ -95,17 +95,17 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => {
-                const on = !state.settings.bgm;
-                setSettings({ bgm: on });
+                const on = !state.settings.autoSpeak;
+                setSettings({ autoSpeak: on });
                 refresh();
-                // Turning the sound on is a tap, which is the one moment iOS
-                // will let the bunny speak — so let her say hello right then.
+                // Turning the voice on is a tap, which is the one moment iOS
+                // will let her speak — so let her say hello right then.
                 if (on) sayHello();
               }}
-              className={`grid size-10 place-items-center rounded-2xl shadow-sm backdrop-blur ${state.settings.bgm ? 'bg-cream' : 'bg-card/90'}`}
-              aria-label={state.settings.bgm ? 'BGMをとめる' : 'BGMをながす'}
+              className={`grid size-10 place-items-center rounded-2xl shadow-sm backdrop-blur ${state.settings.autoSpeak ? 'bg-cream' : 'bg-card/90'}`}
+              aria-label={state.settings.autoSpeak ? 'うさぎの声をけす' : 'うさぎの声をだす'}
             >
-              <PixelIcon name={state.settings.bgm ? 'note' : 'mute'} size={20} />
+              <PixelIcon name={state.settings.autoSpeak ? 'speaker' : 'mute'} size={20} />
             </button>
             <Link
               href="/shop"
@@ -120,14 +120,17 @@ export default function HomePage() {
         <button
           type="button"
           onClick={sayHello}
-          className="relative mx-auto mt-4 block w-fit max-w-[80%] rounded-2xl border-2 border-dark bg-card px-4 py-2.5 shadow-sm active:translate-y-px"
+          disabled={!state.settings.autoSpeak}
+          className="relative mx-auto mt-4 block w-fit max-w-[80%] rounded-2xl border-2 border-dark bg-card px-4 py-2.5 shadow-sm active:translate-y-px disabled:active:translate-y-0"
           aria-label="こえで聞く"
         >
           <p className="pixel whitespace-pre-line text-center text-sm leading-snug">{greeting.en}</p>
-          <span className="pixel mt-1 flex items-center justify-center gap-1 text-[9px] text-ink-soft">
-            <PixelIcon name="speaker" size={10} />
-            タップで聞く
-          </span>
+          {state.settings.autoSpeak && (
+            <span className="pixel mt-1 flex items-center justify-center gap-1 text-[9px] text-ink-soft">
+              <PixelIcon name="speaker" size={10} />
+              タップで聞く
+            </span>
+          )}
           <span className="absolute -bottom-2 left-1/2 size-3 -translate-x-1/2 rotate-45 border-b-2 border-r-2 border-dark bg-card" />
         </button>
 
@@ -165,7 +168,7 @@ export default function HomePage() {
           <p className="mt-1 text-center text-xs text-ink-soft">{topic.ja}</p>
           <Link
             href={`/chat/${topic.id}`}
-            onPointerDown={unlockSpeech}
+            onPointerDown={state.settings.autoSpeak ? unlockSpeech : undefined}
             className="pixel mt-4 flex items-center justify-center gap-2 rounded-full bg-pink-deep py-3.5 text-base text-white shadow-[0_8px_18px_-10px_rgba(244,154,200,1)] transition active:translate-y-0.5"
           >
             はじめる →

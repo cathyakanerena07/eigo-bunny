@@ -82,7 +82,7 @@ export default function SettingsPage() {
       <section className="mt-4 space-y-2">
         {[
           { key: 'showJa' as const, label: '日本語訳をだす', on: s.showJa },
-          { key: 'autoSpeak' as const, label: 'うさぎの声を自動でながす', on: s.autoSpeak },
+          { key: 'autoSpeak' as const, label: 'うさぎの声をながす', on: s.autoSpeak },
         ].map((row) => (
           <button
             key={row.key}

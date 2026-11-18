@@ -26,7 +26,7 @@ export default function LessonPage() {
         onSubmit={(e) => {
           e.preventDefault();
           if (typed) {
-            unlockSpeech();
+            if (state?.settings.autoSpeak) unlockSpeech();
             router.push(`/chat/custom?t=${encodeURIComponent(typed)}`);
           }
         }}
@@ -79,7 +79,7 @@ export default function LessonPage() {
                   <li key={t.id}>
                     <Link
                       href={`/chat/${t.id}`}
-                      onPointerDown={unlockSpeech}
+                      onPointerDown={state?.settings.autoSpeak ? unlockSpeech : undefined}
                       className={`flex items-center gap-3 rounded-3xl border bg-card p-4 transition active:scale-[0.99] ${
                         isNext ? 'border-lavender-deep ring-2 ring-lavender-deep/40' : 'border-line'
                       }`}

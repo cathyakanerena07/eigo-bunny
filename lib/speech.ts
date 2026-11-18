@@ -1,5 +1,3 @@
-import { getBgm } from './bgm';
-
 export function speechSupported(): boolean {
   if (typeof window === 'undefined') return false;
   const w = window as unknown as Record<string, unknown>;
@@ -80,13 +78,7 @@ export function speak(text: string, options: SpeakOptions = {}): void {
   u.lang = voice?.lang ?? 'en-US';
   u.pitch = p.pitch;
   u.rate = p.rate;
-  const bgm = getBgm();
-  u.onstart = () => {
-    bgm?.duck(true);
-    options.onStart?.();
-  };
-  u.onend = () => bgm?.duck(false);
-  u.onerror = () => bgm?.duck(false);
+  u.onstart = () => options.onStart?.();
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(u);
   // Safari parks the queue on its own; resuming an already-running queue is a no-op.
@@ -114,7 +106,6 @@ export function speakWhenAllowed(text: string, options: SpeakOptions = {}): () =
 }
 
 export function stopSpeaking(): void {
-  getBgm()?.duck(false);
   if (ttsSupported()) window.speechSynthesis.cancel();
 }
 

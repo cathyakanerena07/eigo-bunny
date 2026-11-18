@@ -48,7 +48,6 @@ export type Settings = {
   autoSpeak: boolean;
   voicePreset: VoicePreset;
   voiceName: string | null;
-  bgm: boolean;
 };
 
 export type Memory = {
